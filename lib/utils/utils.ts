@@ -1,6 +1,7 @@
 import Link from 'next/link'
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import { Shield, Check, ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Shield, Zap, TrendingUp, Check, ArrowRight } from 'lucide-react'
 
 export default function LandingPage() {
   return (
@@ -27,6 +28,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+        {/* Background effects */}
         <div className="absolute inset-0 bg-gradient-radial from-cyan-500/10 to-transparent opacity-30 blur-3xl" />
         
         <div className="max-w-6xl mx-auto text-center relative z-10">
@@ -44,7 +46,7 @@ export default function LandingPage() {
           
           <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
             NoFOMO vend automatiquement tes cryptos quand tes règles se déclenchent. 
-            Même pendant que tu dors. Plus de regrets, plus de &quot;j&apos;aurais dû vendre&quot;.
+            Même pendant que tu dors. Plus de regrets, plus de "j'aurais dû vendre".
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -96,7 +98,7 @@ export default function LandingPage() {
                 </div>
                 <CardTitle className="text-red-400">Le FOMO killer</CardTitle>
                 <CardDescription>
-                  &quot;Ça va encore monter !&quot; — Spoiler : Ça n&apos;a pas monté. Tu regardes ton +80% devenir +10%.
+                  "Ça va encore monter !" — Spoiler : Ça n'a pas monté. Tu regardes ton +80% devenir +10%.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -118,9 +120,9 @@ export default function LandingPage() {
                 <div className="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center mb-4">
                   <span className="text-3xl">🤦</span>
                 </div>
-                <CardTitle className="text-yellow-400">Le &quot;un peu plus&quot;</CardTitle>
+                <CardTitle className="text-yellow-400">Le "un peu plus"</CardTitle>
                 <CardDescription>
-                  &quot;Juste 5% de plus...&quot; Et boom, correction de 40%. Tu connais la chanson.
+                  "Juste 5% de plus..." Et boom, correction de 40%. Tu connais la chanson.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -157,7 +159,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Crée une règle</h3>
               <p className="text-slate-400">
-                &quot;Vendre 50% de mon BTC si +60%&quot; — Simple et clair.
+                "Vendre 50% de mon BTC si +60%" — Simple et clair.
               </p>
             </div>
             
@@ -174,8 +176,38 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Features */}
       <section className="py-20 px-4 bg-slate-900/30">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">
+              Tout ce dont tu as besoin
+            </h2>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: Shield, title: "100% sécurisé", desc: "API en read-only, encryption AES-256" },
+              { icon: Zap, title: "Ultra rapide", desc: "Exécution en < 2 secondes" },
+              { icon: TrendingUp, title: "Multi-règles", desc: "Combine stop-loss et take-profit" },
+              { icon: Shield, title: "24/7 actif", desc: "Surveille même pendant que tu dors" },
+              { icon: Zap, title: "Notifications", desc: "Email, SMS ou Telegram instantanés" },
+              { icon: TrendingUp, title: "Multi-exchanges", desc: "Binance, Bybit, OKX..." },
+            ].map((feature, i) => (
+              <Card key={i} className="glow-hover">
+                <CardHeader>
+                  <feature.icon className="w-10 h-10 text-cyan-500 mb-2" />
+                  <CardTitle>{feature.title}</CardTitle>
+                  <CardDescription>{feature.desc}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4">
@@ -187,6 +219,7 @@ export default function LandingPage() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Free */}
             <Card>
               <CardHeader>
                 <CardTitle>Gratuit</CardTitle>
@@ -218,6 +251,7 @@ export default function LandingPage() {
               </CardContent>
             </Card>
 
+            {/* Pro */}
             <Card className="border-2 border-cyan-500 relative glow">
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
@@ -258,6 +292,7 @@ export default function LandingPage() {
               </CardContent>
             </Card>
 
+            {/* Whale */}
             <Card>
               <CardHeader>
                 <CardTitle>Whale</CardTitle>
