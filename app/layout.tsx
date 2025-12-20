@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Providers } from './providers'
+import { ClientLayout } from './ClientLayout'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'NoFOMO - Protège tes gains crypto automatiquement',
-  description: 'Arrête de perdre tes gains par émotion. Protection automatique sur CEX, DEX et Perps.',
+  description: 'Arrête de perdre tes gains par émotion. Protection automatique.',
 }
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   )

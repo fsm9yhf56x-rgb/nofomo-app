@@ -9,7 +9,20 @@ import { useUser } from '@/lib/hooks/useUser'
 import { useAccount } from 'wagmi'
 import { supabase } from '@/lib/supabase'
 
-const PLATFORMS = {
+interface Platform {
+  value: string
+  label: string
+  icon: string
+  requiresApi?: boolean
+  requiresWallet?: boolean
+  chain?: string
+  featured?: boolean
+}
+
+const PLATFORMS: {
+  cex: Platform[]
+  perp: Platform[]
+} = {
   cex: [
     { value: 'binance', label: 'Binance', icon: '🟡', requiresApi: true },
     { value: 'coinbase', label: 'Coinbase', icon: '🔵', requiresApi: true },
@@ -51,14 +64,12 @@ export default function NewRulePage() {
     p => p.value === formData.platform
   )
 
-  // Récupérer le prix actuel quand le token change
   useEffect(() => {
     const fetchPrice = async () => {
       if (!formData.tokenSymbol || formData.tokenSymbol.length < 2) return
       
       setLoadingPrice(true)
       try {
-        // Utiliser CoinGecko pour avoir un prix de référence
         const coinMap: { [key: string]: string } = {
           'BTC': 'bitcoin',
           'ETH': 'ethereum',
@@ -265,7 +276,7 @@ export default function NewRulePage() {
                     Plateforme <span className="text-red-500">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
-                    {PLATFORMS[selectedCategory].map((platform: any) => (
+                    {PLATFORMS[selectedCategory].map((platform) => (
                       <button
                         key={platform.value}
                         type="button"
@@ -347,7 +358,7 @@ export default function NewRulePage() {
                     placeholder="Ex: 2300"
                   />
                   <p className="text-xs text-slate-500 mt-1">
-                    Le prix auquel tu as acheté (auto-rempli avec le prix actuel)
+                    Le prix auquel tu as acheté (auto-rempli)
                   </p>
                 </div>
 
@@ -383,7 +394,7 @@ export default function NewRulePage() {
                     placeholder="Ex: -10 (pour -10%)"
                   />
                   <p className="text-xs text-slate-500 mt-1">
-                    Vendre si le prix descend de X% (nombre négatif)
+                    Vendre si le prix descend de X%
                   </p>
                 </div>
 
