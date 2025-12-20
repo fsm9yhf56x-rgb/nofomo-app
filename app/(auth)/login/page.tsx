@@ -1,25 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
 import { supabase } from '@/lib/supabase'
+import { useUser } from '@/lib/hooks/useUser'
 import { Mail, Lock, ArrowRight, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const { user, loading } = useUser()
+  const [loginLoading, setLoginLoading] = useState(false)
   const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   })
 
+  // Rediriger si déjà connecté
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard')
+    }
+  }, [user, loading, router])
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
+    setLoginLoading(true)
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -33,8 +42,16 @@ export default function LoginPage() {
     } catch (err: any) {
       setError(err.message || 'Email ou mot de passe incorrect')
     } finally {
-      setLoading(false)
+      setLoginLoading(false)
     }
+  }
+
+  if (loading) {
+    return <div className="text-center text-slate-400">Chargement...</div>
+  }
+
+  if (user) {
+    return null
   }
 
   return (
@@ -67,7 +84,7 @@ export default function LoginPage() {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                placeholder="john@example.com"
+                placeholder="ton@email.com"
               />
             </div>
           </div>
@@ -90,9 +107,9 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Connexion...' : 'Se connecter'}
-            {!loading && <ArrowRight className="ml-2 w-5 h-5" />}
+          <Button type="submit" className="w-full" disabled={loginLoading}>
+            {loginLoading ? 'Connexion...' : 'Se connecter'}
+            {!loginLoading && <ArrowRight className="ml-2 w-5 h-5" />}
           </Button>
 
           <p className="text-center text-sm text-slate-400">
