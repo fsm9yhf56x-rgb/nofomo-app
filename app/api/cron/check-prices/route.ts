@@ -3,22 +3,26 @@ import { createClient } from '@supabase/supabase-js'
 import { getCurrentPrice, executeSellOrder, getTokenBalance } from '@/lib/binance'
 import CryptoJS from 'crypto-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
-function decrypt(encryptedText: string): string {
-  const bytes = CryptoJS.AES.decrypt(encryptedText, process.env.ENCRYPTION_KEY!)
-  return bytes.toString(CryptoJS.enc.Utf8)
-}
 
 export async function GET(request: Request) {
-  try {
-    // 🔒 Vérification de sécurité
-    const authHeader = request.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET
-    
+    try {
+      // Initialiser Supabase ici (dans la fonction)
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      )
+  
+      // Fonction de décryptage
+      function decrypt(encryptedText: string): string {
+        const bytes = CryptoJS.AES.decrypt(encryptedText, process.env.ENCRYPTION_KEY!)
+        return bytes.toString(CryptoJS.enc.Utf8)
+      }
+  
+      // 🔒 Vérification de sécurité
+      const authHeader = request.headers.get('authorization')
+      const cronSecret = process.env.CRON_SECRET
+
     if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
       console.log('❌ Accès non autorisé')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
