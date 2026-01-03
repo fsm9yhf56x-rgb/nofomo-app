@@ -157,7 +157,7 @@ export default function NewRulePage() {
           token_symbol: formData.tokenSymbol.toUpperCase(),
           rule_type: 'take_profit',
           entry_price: parseFloat(formData.entryPrice),
-          trigger_type: 'profit_percent',
+          trigger_type: 'percent_profit',
           trigger_value: parseFloat(formData.takeProfitPercent),
           sell_percent: parseFloat(formData.sellPercent),
           is_active: true
@@ -173,7 +173,7 @@ export default function NewRulePage() {
           token_symbol: formData.tokenSymbol.toUpperCase(),
           rule_type: 'stop_loss',
           entry_price: parseFloat(formData.entryPrice),
-          trigger_type: 'loss_percent',
+          trigger_type: 'percent_loss',
           trigger_value: Math.abs(parseFloat(formData.stopLossPercent)), // Valeur absolue
           sell_percent: parseFloat(formData.sellPercent),
           is_active: true

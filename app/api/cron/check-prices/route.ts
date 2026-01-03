@@ -85,13 +85,13 @@ export async function GET(request: Request) {
           shouldExecute = true
         } else if (rule.trigger_type === 'price_below' && currentPrice <= rule.trigger_value) {
           shouldExecute = true
-        } else if (rule.trigger_type === 'profit_percent') {
+        } else if (rule.trigger_type === 'percent_profit') {
           // Calculer le profit en %
           const profitPercent = ((currentPrice - rule.entry_price) / rule.entry_price) * 100
           if (profitPercent >= rule.trigger_value) {
             shouldExecute = true
           }
-        } else if (rule.trigger_type === 'loss_percent') {
+        } else if (rule.trigger_type === 'percent_loss') {
           // Calculer la perte en %
           const lossPercent = ((rule.entry_price - currentPrice) / rule.entry_price) * 100
           if (lossPercent >= rule.trigger_value) {
