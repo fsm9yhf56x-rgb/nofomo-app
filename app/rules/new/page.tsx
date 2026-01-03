@@ -44,6 +44,7 @@ export default function NewRulePage() {
   const [selectedCategory, setSelectedCategory] = useState<'cex' | 'perp'>('perp')
   const [currentPrice, setCurrentPrice] = useState<number | null>(null)
   const [loadingPrice, setLoadingPrice] = useState(false)
+  const [exchanges, setExchanges] = useState<any[]>([])
   
   const [formData, setFormData] = useState({
     name: '',
@@ -55,6 +56,28 @@ export default function NewRulePage() {
     sellPercent: '100'
   })
 
+  useEffect(() => {
+    const fetchExchanges = async () => {
+      if (!user) return
+      
+      try {
+        const { data: exchangeData } = await supabase
+          .from('exchange_connections')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_active', true)
+
+        if (exchangeData) {
+          setExchanges(exchangeData)
+        }
+      } catch (err) {
+        console.error('Erreur récupération exchanges:', err)
+      }
+    }
+
+    fetchExchanges()
+  }, [user])
+
   if (!loading && !user) {
     router.push('/login')
     return null
@@ -62,6 +85,11 @@ export default function NewRulePage() {
 
   const selectedPlatform = [...PLATFORMS.cex, ...PLATFORMS.perp].find(
     p => p.value === formData.platform
+  )
+
+  // Trouver l'exchange_connection correspondant à la plateforme sélectionnée
+  const selectedExchange = exchanges.find(
+    ex => ex.exchange_name === formData.platform
   )
 
   useEffect(() => {
@@ -110,28 +138,52 @@ export default function NewRulePage() {
         throw new Error('Tu dois définir au moins un Take Profit ou un Stop Loss')
       }
 
-      if (selectedPlatform?.requiresWallet && !isConnected) {
-        throw new Error('Tu dois connecter ton wallet pour utiliser Hyperliquid')
+      if (!selectedExchange) {
+        throw new Error(`Tu dois d'abord connecter un compte ${formData.platform}`)
       }
 
       if (!formData.entryPrice) {
         throw new Error('Le prix d\'entrée est requis')
       }
 
-      const { data, error } = await supabase
-        .from('trading_rules')
-        .insert({
+      const rulesToInsert = []
+
+      // Si Take Profit est défini, créer une règle take_profit
+      if (formData.takeProfitPercent) {
+        rulesToInsert.push({
           user_id: user?.id,
-          rule_name: formData.name,
+          exchange_connection_id: selectedExchange.id,
+          rule_name: formData.name ? `${formData.name} - Take Profit` : null,
           token_symbol: formData.tokenSymbol.toUpperCase(),
-          platform: formData.platform,
+          rule_type: 'take_profit',
           entry_price: parseFloat(formData.entryPrice),
-          take_profit_percent: formData.takeProfitPercent ? parseFloat(formData.takeProfitPercent) : null,
-          stop_loss_percent: formData.stopLossPercent ? parseFloat(formData.stopLossPercent) : null,
+          trigger_type: 'profit_percent',
+          trigger_value: parseFloat(formData.takeProfitPercent),
           sell_percent: parseFloat(formData.sellPercent),
-          wallet_address: selectedPlatform?.requiresWallet ? address : null,
           is_active: true
         })
+      }
+
+      // Si Stop Loss est défini, créer une règle stop_loss
+      if (formData.stopLossPercent) {
+        rulesToInsert.push({
+          user_id: user?.id,
+          exchange_connection_id: selectedExchange.id,
+          rule_name: formData.name ? `${formData.name} - Stop Loss` : null,
+          token_symbol: formData.tokenSymbol.toUpperCase(),
+          rule_type: 'stop_loss',
+          entry_price: parseFloat(formData.entryPrice),
+          trigger_type: 'loss_percent',
+          trigger_value: Math.abs(parseFloat(formData.stopLossPercent)), // Valeur absolue
+          sell_percent: parseFloat(formData.sellPercent),
+          is_active: true
+        })
+      }
+
+      // Insérer toutes les règles
+      const { data, error } = await supabase
+        .from('trading_rules')
+        .insert(rulesToInsert)
         .select()
 
       if (error) throw error
