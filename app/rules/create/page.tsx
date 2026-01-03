@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import { Shield, ArrowLeft, AlertCircle, TrendingUp, TrendingDown, Target } from 'lucide-react'
+import { Shield, ArrowLeft, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 export default function CreateRulePage() {
@@ -15,14 +15,12 @@ export default function CreateRulePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [formData, setFormData] = useState({
+    tokenSymbol: '',
     ruleName: '',
-    tokenSymbol: 'BTCUSDT',
-    ruleType: 'take_profit',
-    triggerType: 'percent_profit',
-    triggerValue: '',
-    sellPercent: '100',
     entryPrice: '',
-    exchangeConnectionId: ''
+    ruleType: 'take_profit_percent',
+    triggerValue: '',
+    sellPercent: '100'
   })
 
   useEffect(() => {
@@ -52,7 +50,6 @@ export default function CreateRulePage() {
     }
 
     setExchanges(exchangeData)
-    setFormData(prev => ({ ...prev, exchangeConnectionId: exchangeData[0].id }))
     setLoading(false)
   }
 
@@ -63,23 +60,63 @@ export default function CreateRulePage() {
 
     try {
       // Validation
+      if (!formData.tokenSymbol) {
+        throw new Error('Le token est requis')
+      }
+      if (!formData.ruleType) {
+        throw new Error('Le type de règle est requis')
+      }
       if (!formData.triggerValue || parseFloat(formData.triggerValue) <= 0) {
-        throw new Error('La valeur du déclencheur doit être supérieure à 0')
+        throw new Error('La valeur de déclenchement doit être supérieure à 0')
+      }
+      if (!formData.sellPercent || parseFloat(formData.sellPercent) < 1 || parseFloat(formData.sellPercent) > 100) {
+        throw new Error('Le pourcentage à vendre doit être entre 1 et 100%')
+      }
+
+      // Déterminer rule_type et trigger_type selon le type choisi
+      let ruleType = ''
+      let triggerType = ''
+      
+      switch (formData.ruleType) {
+        case 'take_profit_percent':
+          ruleType = 'take_profit'
+          triggerType = 'percent_profit'
+          break
+        case 'stop_loss_percent':
+          ruleType = 'stop_loss'
+          triggerType = 'percent_loss'
+          break
+        case 'price_above':
+          ruleType = 'price_target'
+          triggerType = 'price_above'
+          break
+        case 'price_below':
+          ruleType = 'price_target'
+          triggerType = 'price_below'
+          break
+      }
+
+      // Récupérer le premier exchange de l'utilisateur
+      const firstExchange = exchanges[0]
+      if (!firstExchange) {
+        throw new Error('Aucun exchange connecté. Connecte un exchange d\'abord.')
       }
 
       const { error: insertError } = await supabase
         .from('trading_rules')
         .insert({
           user_id: user.id,
-          exchange_connection_id: formData.exchangeConnectionId,
-          rule_name: formData.ruleName,
-          token_symbol: formData.tokenSymbol,
-          rule_type: formData.ruleType,
-          trigger_type: formData.triggerType,
+          exchange_connection_id: firstExchange.id,
+          rule_name: formData.ruleName || 'Règle sans nom',
+          token_symbol: formData.tokenSymbol.toUpperCase(),
+          rule_type: ruleType,
+          entry_price: formData.entryPrice ? parseFloat(formData.entryPrice) : null,
+          entry_quantity: 0,
+          trigger_type: triggerType,
           trigger_value: parseFloat(formData.triggerValue),
           sell_percent: parseFloat(formData.sellPercent),
-          entry_price: formData.entryPrice ? parseFloat(formData.entryPrice) : null,
-          is_active: true
+          is_active: true,
+          is_triggered: false
         })
 
       if (insertError) throw insertError
@@ -104,10 +141,11 @@ export default function CreateRulePage() {
     )
   }
 
-  const ruleTypes = [
-    { value: 'take_profit', label: 'Take Profit', icon: TrendingUp, desc: 'Vendre quand en gain', color: 'green' },
-    { value: 'stop_loss', label: 'Stop Loss', icon: TrendingDown, desc: 'Vendre quand en perte', color: 'red' },
-    { value: 'price_target', label: 'Prix Cible', icon: Target, desc: 'Vendre à un prix précis', color: 'blue' }
+  const ruleTypeOptions = [
+    { value: 'take_profit_percent', label: 'Take Profit (%)', desc: 'Vendre quand le profit atteint X%' },
+    { value: 'stop_loss_percent', label: 'Stop Loss (%)', desc: 'Vendre quand la perte atteint X%' },
+    { value: 'price_above', label: 'Prix cible au-dessus', desc: 'Vendre quand le prix dépasse X$' },
+    { value: 'price_below', label: 'Prix cible en-dessous', desc: 'Vendre quand le prix descend sous X$' }
   ]
 
   return (
@@ -138,10 +176,10 @@ export default function CreateRulePage() {
 
           <div className="mb-8">
             <h1 className="text-4xl font-bold mb-2">
-              Crée ta première règle 🎯
+              Créer une règle 🎯
             </h1>
             <p className="text-slate-400 text-lg">
-              Protection automatique de tes gains. Simple et efficace.
+              Crée ta règle en 30 secondes. Simple et efficace.
             </p>
           </div>
 
@@ -149,11 +187,11 @@ export default function CreateRulePage() {
             <CardHeader>
               <CardTitle>Configuration de la règle</CardTitle>
               <CardDescription>
-                Définis quand et comment NoFOMO doit protéger tes gains
+                Remplis les champs ci-dessous pour créer ta règle
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-start gap-2">
                     <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -161,15 +199,33 @@ export default function CreateRulePage() {
                   </div>
                 )}
 
-                {/* Rule Name */}
+                {/* Token - Requis */}
+                <div>
+                  <label htmlFor="tokenSymbol" className="block text-sm font-medium mb-2">
+                    Token <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="tokenSymbol"
+                    type="text"
+                    required
+                    value={formData.tokenSymbol}
+                    onChange={(e) => setFormData({ ...formData, tokenSymbol: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    placeholder="Ex: BTCUSDT, ETH, SOL"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Format: BTCUSDT, ETH, SOL, etc.
+                  </p>
+                </div>
+
+                {/* Nom de la règle - Optionnel */}
                 <div>
                   <label htmlFor="ruleName" className="block text-sm font-medium mb-2">
-                    Nom de la règle
+                    Nom de la règle <span className="text-slate-500 text-xs">(optionnel)</span>
                   </label>
                   <input
                     id="ruleName"
                     type="text"
-                    required
                     value={formData.ruleName}
                     onChange={(e) => setFormData({ ...formData, ruleName: e.target.value })}
                     className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
@@ -177,137 +233,94 @@ export default function CreateRulePage() {
                   />
                 </div>
 
-                {/* Token */}
+                {/* Prix d'entrée - Optionnel */}
                 <div>
-                  <label htmlFor="tokenSymbol" className="block text-sm font-medium mb-2">
-                    Token / Paire
+                  <label htmlFor="entryPrice" className="block text-sm font-medium mb-2">
+                    Prix d&apos;entrée <span className="text-slate-500 text-xs">(optionnel)</span>
                   </label>
-                  <select
-                    id="tokenSymbol"
-                    value={formData.tokenSymbol}
-                    onChange={(e) => setFormData({ ...formData, tokenSymbol: e.target.value })}
+                  <input
+                    id="entryPrice"
+                    type="number"
+                    step="0.01"
+                    value={formData.entryPrice}
+                    onChange={(e) => setFormData({ ...formData, entryPrice: e.target.value })}
                     className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  >
-                    <option value="BTCUSDT">BTC/USDT</option>
-                    <option value="ETHUSDT">ETH/USDT</option>
-                    <option value="SOLUSDT">SOL/USDT</option>
-                    <option value="BNBUSDT">BNB/USDT</option>
-                    <option value="ADAUSDT">ADA/USDT</option>
-                  </select>
+                    placeholder="Ex: 40000 (pour calculer le profit/perte %)"
+                  />
                   <p className="text-xs text-slate-500 mt-1">
-                    Plus de tokens disponibles après validation du MVP
+                    Le prix auquel tu as acheté (pour calculer le profit/perte %)
                   </p>
                 </div>
 
-                {/* Rule Type */}
+                {/* Type de règle - Requis */}
                 <div>
-                  <label className="block text-sm font-medium mb-3">
-                    Type de protection
+                  <label htmlFor="ruleType" className="block text-sm font-medium mb-2">
+                    Type de règle <span className="text-red-500">*</span>
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {ruleTypes.map((type) => {
-                      const Icon = type.icon
-                      const isSelected = formData.ruleType === type.value
-                      return (
-                        <button
-                          key={type.value}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, ruleType: type.value })}
-                          className={`
-                            p-4 rounded-lg border-2 transition-all text-left
-                            ${isSelected 
-                              ? 'border-cyan-500 bg-cyan-500/10' 
-                              : 'border-slate-700 bg-slate-800 hover:border-slate-600'
-                            }
-                          `}
-                        >
-                          <Icon className={`w-6 h-6 mb-2 ${isSelected ? 'text-cyan-500' : 'text-slate-400'}`} />
-                          <div className="font-semibold mb-1">{type.label}</div>
-                          <div className="text-xs text-slate-400">{type.desc}</div>
-                        </button>
-                      )
-                    })}
-                  </div>
+                  <select
+                    id="ruleType"
+                    required
+                    value={formData.ruleType}
+                    onChange={(e) => setFormData({ ...formData, ruleType: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    {ruleTypeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Trigger Configuration */}
-                <div className="space-y-4">
-                  <label className="block text-sm font-medium">
-                    Déclenchement
+                {/* Valeur de déclenchement - Requis */}
+                <div>
+                  <label htmlFor="triggerValue" className="block text-sm font-medium mb-2">
+                    Valeur de déclenchement <span className="text-red-500">*</span>
                   </label>
-
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {/* Trigger Value */}
-                    <div>
-                      <label htmlFor="triggerValue" className="block text-sm text-slate-400 mb-2">
-                        {formData.ruleType === 'price_target' ? 'Prix cible ($)' : 'Pourcentage (%)'}
-                      </label>
-                      <input
-                        id="triggerValue"
-                        type="number"
-                        step="0.01"
-                        required
-                        value={formData.triggerValue}
-                        onChange={(e) => setFormData({ ...formData, triggerValue: e.target.value })}
-                        className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        placeholder={formData.ruleType === 'price_target' ? '45000' : '50'}
-                      />
-                    </div>
-
-                    {/* Sell Percent */}
-                    <div>
-                      <label htmlFor="sellPercent" className="block text-sm text-slate-400 mb-2">
-                        Quantité à vendre (%)
-                      </label>
-                      <input
-                        id="sellPercent"
-                        type="number"
-                        min="1"
-                        max="100"
-                        required
-                        value={formData.sellPercent}
-                        onChange={(e) => setFormData({ ...formData, sellPercent: e.target.value })}
-                        className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                        placeholder="100"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Entry Price (optional) */}
-                  <div>
-                    <label htmlFor="entryPrice" className="block text-sm text-slate-400 mb-2">
-                      Prix d&apos;entrée (optionnel)
-                    </label>
-                    <input
-                      id="entryPrice"
-                      type="number"
-                      step="0.01"
-                      value={formData.entryPrice}
-                      onChange={(e) => setFormData({ ...formData, entryPrice: e.target.value })}
-                      className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                      placeholder="Ex: 40000 (pour calculer le gain %)"
-                    />
-                  </div>
+                  <input
+                    id="triggerValue"
+                    type="number"
+                    step="0.01"
+                    required
+                    value={formData.triggerValue}
+                    onChange={(e) => setFormData({ ...formData, triggerValue: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    placeholder={
+                      formData.ruleType === 'price_above' || formData.ruleType === 'price_below'
+                        ? 'Ex: 100000 (en $)'
+                        : 'Ex: 10 (en %)'
+                    }
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    {formData.ruleType === 'price_above' || formData.ruleType === 'price_below'
+                      ? 'Prix en dollars ($)'
+                      : 'Pourcentage (%)'}
+                  </p>
                 </div>
 
-                {/* Preview */}
-                <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
-                  <div className="font-semibold mb-2 text-cyan-400">📝 Résumé</div>
-                  <p className="text-sm text-slate-300">
-                    {formData.ruleType === 'take_profit' && 
-                      `Vendre ${formData.sellPercent}% de ${formData.tokenSymbol.replace('USDT', '')} si profit de +${formData.triggerValue}%`
-                    }
-                    {formData.ruleType === 'stop_loss' && 
-                      `Vendre ${formData.sellPercent}% de ${formData.tokenSymbol.replace('USDT', '')} si perte de -${formData.triggerValue}%`
-                    }
-                    {formData.ruleType === 'price_target' && 
-                      `Vendre ${formData.sellPercent}% de ${formData.tokenSymbol.replace('USDT', '')} si le prix atteint $${formData.triggerValue}`
-                    }
+                {/* Pourcentage à vendre - Requis */}
+                <div>
+                  <label htmlFor="sellPercent" className="block text-sm font-medium mb-2">
+                    Pourcentage à vendre <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="sellPercent"
+                    type="number"
+                    min="1"
+                    max="100"
+                    required
+                    value={formData.sellPercent}
+                    onChange={(e) => setFormData({ ...formData, sellPercent: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    placeholder="100"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    1-100% de la position à vendre (défaut: 100%)
                   </p>
                 </div>
 
                 {/* Submit */}
-                <div className="flex gap-3">
+                <div className="flex gap-3 pt-2">
                   <Link href="/dashboard" className="flex-1">
                     <Button type="button" variant="outline" className="w-full">
                       Annuler
