@@ -138,7 +138,7 @@ export async function GET(request: Request) {
               rule_id: rule.id,
               user_id: rule.user_id,
               executed_at: new Date().toISOString(),
-              trigger_price: currentPrice,
+              trigger_value: currentPrice,
               quantity_sold: quantityToSell,
               execution_details: order,
               status: 'success'
@@ -183,7 +183,7 @@ export async function GET(request: Request) {
           rule_id: rule.id,
           user_id: rule.user_id,
           executed_at: new Date().toISOString(),
-          trigger_price: 0,
+          trigger_value: 0,
           quantity_sold: 0,
           execution_details: { error: error.message },
           status: 'failed'

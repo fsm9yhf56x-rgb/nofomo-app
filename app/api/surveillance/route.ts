@@ -128,7 +128,7 @@ export async function GET(request: Request) {
         }
 
         if (triggered) {
-          console.log(`🚨 RÈGLE DÉCLENCHÉE: ${rule.name || rule.token_symbol}`)
+          console.log(`🚨 RÈGLE DÉCLENCHÉE: ${rule.rule_name || rule.token_symbol}`)
           console.log(`   Raison: ${triggerReason}`)
 
           // Marquer la règle comme exécutée
@@ -144,7 +144,7 @@ export async function GET(request: Request) {
           // Pour l'instant, on log juste
           
           results.push({
-            rule: rule.name || rule.token_symbol,
+            rule: rule.rule_name || rule.token_symbol,
             platform: rule.platform,
             token: rule.token_symbol,
             triggered: true,
@@ -154,7 +154,7 @@ export async function GET(request: Request) {
           })
         } else {
           results.push({
-            rule: rule.name || rule.token_symbol,
+            rule: rule.rule_name || rule.token_symbol,
             platform: rule.platform,
             token: rule.token_symbol,
             triggered: false,

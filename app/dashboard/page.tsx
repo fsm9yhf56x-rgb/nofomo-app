@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase'
 
 interface Rule {
   id: string
-  name: string
+  rule_name: string
   token_symbol: string
   platform: string
   take_profit_percent: number | null
@@ -276,7 +276,7 @@ export default function DashboardPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-xl font-semibold">
-                            {rule.name || `Règle ${rule.token_symbol}`}
+                            {rule.rule_name || `Règle ${rule.token_symbol}`}
                           </h3>
                           <span className="px-2 py-1 text-xs rounded-full bg-cyan-500/10 text-cyan-500">
                             {rule.platform}

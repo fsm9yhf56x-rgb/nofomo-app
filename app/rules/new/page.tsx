@@ -122,7 +122,7 @@ export default function NewRulePage() {
         .from('trading_rules')
         .insert({
           user_id: user?.id,
-          name: formData.name,
+          rule_name: formData.name,
           token_symbol: formData.tokenSymbol.toUpperCase(),
           platform: formData.platform,
           entry_price: parseFloat(formData.entryPrice),
