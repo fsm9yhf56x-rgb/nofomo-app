@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAccount } from 'wagmi'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { Shield, TrendingUp, LogOut, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 import Link from 'next/link'
@@ -24,7 +22,6 @@ interface Rule {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { address, isConnected } = useAccount()
   const { user, loading } = useUser()
   const [rules, setRules] = useState<Rule[]>([])
   const [loadingRules, setLoadingRules] = useState(true)
@@ -135,7 +132,13 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <span className="text-sm text-slate-400">🔥 0 jours</span>
               <span className="text-sm text-slate-400">{user.email}</span>
-              <ConnectButton />
+              <Link 
+                href="/connect-exchange"
+                className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors text-sm"
+                title="Connecter un exchange CEX (Binance, Bybit, etc.)"
+              >
+                Connecter Exchange
+              </Link>
               <button
                 onClick={handleLogout}
                 className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
