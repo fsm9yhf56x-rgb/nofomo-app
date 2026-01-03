@@ -74,7 +74,7 @@ export async function GET(request: Request) {
 
     // 1. Récupérer toutes les règles actives
     const { data: rules, error: rulesError } = await supabase
-      .from('rules')
+      .from('trading_rules')
       .select('*')
       .eq('is_active', true)
       .is('executed_at', null)
@@ -133,7 +133,7 @@ export async function GET(request: Request) {
 
           // Marquer la règle comme exécutée
           await supabase
-            .from('rules')
+            .from('trading_rules')
             .update({ 
               executed_at: new Date().toISOString(),
               is_active: false 

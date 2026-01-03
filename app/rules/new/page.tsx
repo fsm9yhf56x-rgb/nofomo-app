@@ -119,7 +119,7 @@ export default function NewRulePage() {
       }
 
       const { data, error } = await supabase
-        .from('rules')
+        .from('trading_rules')
         .insert({
           user_id: user?.id,
           name: formData.name,

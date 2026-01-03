@@ -43,7 +43,7 @@ export default function DashboardPage() {
       
       try {
         const { data, error } = await supabase
-          .from('rules')
+          .from('trading_rules')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -68,7 +68,7 @@ export default function DashboardPage() {
   const handleToggleRule = async (ruleId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('rules')
+        .from('trading_rules')
         .update({ is_active: !currentStatus })
         .eq('id', ruleId)
 
@@ -88,7 +88,7 @@ export default function DashboardPage() {
 
     try {
       const { error } = await supabase
-        .from('rules')
+        .from('trading_rules')
         .delete()
         .eq('id', ruleId)
 
