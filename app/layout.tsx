@@ -1,14 +1,13 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+'use client'
+
 import './globals.css'
-import { ClientLayout } from './ClientLayout'
+import '@rainbow-me/rainbowkit/styles.css'
+import { WagmiProvider } from 'wagmi'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RainbowKitProvider, darkTheme } from '@rainbow-me/rainbowkit'
+import { config } from '@/lib/web3-config'
 
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: 'NoFOMO - Protège tes gains crypto automatiquement',
-  description: 'Arrête de perdre tes gains par émotion. Protection automatique.',
-}
+const queryClient = new QueryClient()
 
 export default function RootLayout({
   children,
@@ -16,9 +15,21 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr">
-      <body className={inter.className}>
-        <ClientLayout>{children}</ClientLayout>
+    <html lang="en">
+      <body>
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <RainbowKitProvider
+              theme={darkTheme({
+                accentColor: '#a8b5a0',
+                accentColorForeground: 'white',
+                borderRadius: 'medium',
+              })}
+            >
+              {children}
+            </RainbowKitProvider>
+          </QueryClientProvider>
+        </WagmiProvider>
       </body>
     </html>
   )

@@ -1,7 +1,8 @@
-import type { NextConfig } from "next";
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'standalone',
+  reactStrictMode: true,
+  // ... le reste de votre config existante
+}
 
-const nextConfig: NextConfig = {
-  turbopack: {},
-};
-
-export default nextConfig;
+module.exports = nextConfig

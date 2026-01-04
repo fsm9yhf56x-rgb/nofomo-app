@@ -1,334 +1,159 @@
-import Link from 'next/link'
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui'
-import { Shield, Check, ArrowRight } from 'lucide-react'
+'use client'
 
-export default function LandingPage() {
-  return (
-    <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-50 glass border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <Shield className="w-8 h-8 text-cyan-500" />
-              <span className="text-2xl font-bold gradient-text">NoFOMO</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link href="/login">
-                <Button variant="ghost">Se connecter</Button>
-              </Link>
-              <Link href="/signup">
-                <Button>Commencer gratuitement</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+import { useEffect, useState } from 'react'
+import { useAccount } from 'wagmi'
+import { ConnectButton } from '@rainbow-me/rainbowkit'
+import { motion } from 'framer-motion'
+import KnightAvatar from '@/components/KnightAvatar'
+import XPBar from '@/components/XPBar'
+import FlameStreak from '@/components/FlameStreak'
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-radial from-cyan-500/10 to-transparent opacity-30 blur-3xl" />
-        
-        <div className="max-w-6xl mx-auto text-center relative z-10">
-          <div className="inline-block mb-4 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-full">
-            <span className="text-cyan-400 text-sm font-medium">
-              🚀 Arrête de perdre tes gains par émotion
-            </span>
-          </div>
-          
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-            Trade avec ta tête,
-            <br />
-            <span className="gradient-text">pas avec ton cœur</span>
+export default function Dashboard() {
+  const { address, isConnected } = useAccount()
+  const [userProfile, setUserProfile] = useState({
+    level: 1,
+    xp: 0,
+    streak_days: 0
+  })
+
+  // Award points on wallet connect
+  useEffect(() => {
+    if (isConnected && address) {
+      // Call API to award points for connecting wallet
+      fetch('/api/points/award', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'wallet_connected', 
+          points: 10 
+        })
+      })
+    }
+  }, [isConnected, address])
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-beige-50 via-white to-lavender-50">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="zen-card p-12 max-w-md text-center space-y-6"
+        >
+          <div className="text-6xl mb-4">🏰</div>
+          <h1 className="text-3xl font-semibold text-slate-700">
+            Welcome to NoFOMO
           </h1>
-          
-          <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-            NoFOMO vend automatiquement tes cryptos quand tes règles se déclenchent. 
-            Même pendant que tu dors. Plus de regrets, plus de &quot;j&apos;aurais dû vendre&quot;.
+          <p className="text-slate-600">
+            A haven of peace to protect your crypto gains
           </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link href="/signup">
-              <Button size="lg" className="text-lg">
-                Essayer gratuitement
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="text-lg">
-              Voir la démo
-            </Button>
+          <p className="text-sm text-slate-500">
+            Combat your emotions, not the market
+          </p>
+          <div className="pt-4">
+            <ConnectButton />
           </div>
-          
-          <div className="flex items-center justify-center gap-8 text-sm text-slate-400">
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-500" />
-              <span>Gratuit pour toujours</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-500" />
-              <span>Sans carte bancaire</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Check className="w-4 h-4 text-green-500" />
-              <span>Setup en 2 minutes</span>
-            </div>
+        </motion.div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-beige-50 via-white to-lavender-50">
+      {/* Header */}
+      <header className="glass border-b border-slate-100 px-6 py-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div className="text-2xl font-semibold text-slate-700">
+            🏰 NoFOMO
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="text-slate-600 hover:text-slate-800 transition-colors">
+              ☕ Zen Mode
+            </button>
+            <ConnectButton />
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Problem Section */}
-      <section className="py-20 px-4 bg-slate-900/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">
-              On a tous déjà vécu ça...
-            </h2>
-            <p className="text-slate-400 text-lg">
-              Le trading émotionnel coûte des milliards chaque année
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="glow-hover">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-red-500/20 flex items-center justify-center mb-4">
-                  <span className="text-3xl">😰</span>
-                </div>
-                <CardTitle className="text-red-400">Le FOMO killer</CardTitle>
-                <CardDescription>
-                  &quot;Ça va encore monter !&quot; — Spoiler : Ça n&apos;a pas monté. Tu regardes ton +80% devenir +10%.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            
-            <Card className="glow-hover">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-orange-500/20 flex items-center justify-center mb-4">
-                  <span className="text-3xl">😴</span>
-                </div>
-                <CardTitle className="text-orange-400">La nuit fatale</CardTitle>
-                <CardDescription>
-                  Tu dors tranquille avec +60%. Tu te réveilles à -20%. Le marché ne dort jamais.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            
-            <Card className="glow-hover">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-yellow-500/20 flex items-center justify-center mb-4">
-                  <span className="text-3xl">🤦</span>
-                </div>
-                <CardTitle className="text-yellow-400">Le &quot;un peu plus&quot;</CardTitle>
-                <CardDescription>
-                  &quot;Juste 5% de plus...&quot; Et boom, correction de 40%. Tu connais la chanson.
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">
-              Simple comme bonjour
-            </h2>
-            <p className="text-slate-400 text-lg">
-              3 étapes pour protéger tes gains automatiquement
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                1
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Connecte ton exchange</h3>
-              <p className="text-slate-400">
-                Binance, Bybit ou OKX. En read-only, tes fonds restent chez toi.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                2
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Crée une règle</h3>
-              <p className="text-slate-400">
-                &quot;Vendre 50% de mon BTC si +60%&quot; — Simple et clair.
-              </p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                3
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Laisse faire</h3>
-              <p className="text-slate-400">
-                NoFOMO surveille 24/7 et exécute automatiquement. Tu reçois une notif.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section className="py-20 px-4 bg-slate-900/30">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">
-              Un prix qui a du sens
-            </h2>
-            <p className="text-slate-400 text-lg">
-              Commence gratuitement, upgrade quand tu veux
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gratuit</CardTitle>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">0€</span>
-                  <span className="text-slate-400">/mois</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>3 règles actives</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>1 exchange (Binance)</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Notifications email</span>
-                  </li>
-                </ul>
-                <Link href="/signup">
-                  <Button variant="outline" className="w-full">
-                    Commencer
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-cyan-500 relative glow">
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                <span className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  Populaire
-                </span>
-              </div>
-              <CardHeader>
-                <CardTitle>Pro</CardTitle>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">15€</span>
-                  <span className="text-slate-400">/mois</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Règles illimitées</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Tous les exchanges</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>SMS + Telegram</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Historique complet</span>
-                  </li>
-                </ul>
-                <Link href="/signup">
-                  <Button className="w-full">
-                    Essayer Pro
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Whale</CardTitle>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">50€</span>
-                  <span className="text-slate-400">/mois</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Tout Pro +</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Analytics avancées</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Suggestions IA</span>
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-500" />
-                    <span>Support prioritaire</span>
-                  </li>
-                </ul>
-                <Link href="/signup">
-                  <Button variant="outline" className="w-full">
-                    Choisir Whale
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Final */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Prêt à arrêter de trader avec tes émotions ?
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-6 py-12 space-y-8">
+        {/* Greeting */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <h2 className="text-3xl font-medium text-slate-700 mb-2">
+            Good morning, Knight 🌿
           </h2>
-          <p className="text-xl text-slate-300 mb-8">
-            Rejoins les traders qui protègent leurs gains automatiquement
+          <p className="text-slate-500">
+            Your protections are active and watching
           </p>
-          <Link href="/signup">
-            <Button size="lg" className="text-lg">
-              Commencer gratuitement
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Button>
-          </Link>
-          <p className="text-sm text-slate-500 mt-4">
-            Gratuit pour toujours • Sans carte bancaire • Setup en 2 min
-          </p>
-        </div>
-      </section>
+        </motion.div>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800 py-8 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Shield className="w-6 h-6 text-cyan-500" />
-            <span className="font-bold gradient-text">NoFOMO</span>
+        {/* Knight Avatar Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="zen-card p-8"
+        >
+          <KnightAvatar level={userProfile.level} />
+          <div className="mt-6">
+            <XPBar 
+              current={userProfile.xp} 
+              max={userProfile.level * 1000} 
+            />
           </div>
-          <p className="text-slate-500 text-sm">
-            © 2025 NoFOMO. Tous droits réservés.
-          </p>
-        </div>
-      </footer>
+        </motion.div>
+
+        {/* Flame Streak */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <FlameStreak days={userProfile.streak_days} />
+        </motion.div>
+
+        {/* Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+          <div className="zen-card p-6 text-center">
+            <div className="text-3xl mb-2">💎</div>
+            <div className="text-2xl font-semibold text-slate-700">$0</div>
+            <div className="text-sm text-slate-500">Gains protected</div>
+          </div>
+          
+          <div className="zen-card p-6 text-center">
+            <div className="text-3xl mb-2">🛡️</div>
+            <div className="text-2xl font-semibold text-slate-700">0</div>
+            <div className="text-sm text-slate-500">Active protections</div>
+          </div>
+          
+          <div className="zen-card p-6 text-center">
+            <div className="text-3xl mb-2">👻</div>
+            <div className="text-2xl font-semibold text-slate-700">Quiet</div>
+            <div className="text-sm text-slate-500">Demons status</div>
+          </div>
+        </motion.div>
+
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="text-center"
+        >
+          <button className="btn-zen text-lg px-8 py-4">
+            + Create your first protection
+          </button>
+        </motion.div>
+      </main>
     </div>
   )
 }

@@ -3,72 +3,81 @@
 @tailwind utilities;
 
 :root {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  --sage-green: #a8b5a0;
+  --slate-blue: #6b7b8c;
+  --warm-beige: #e8dcc4;
+  --soft-lavender: #c5b9cd;
+  --gentle-gold: #d4af37;
 }
 
 body {
-  background: linear-gradient(to bottom, #0a0e27, #1a1f3a);
-  color: white;
-  font-family: system-ui, -apple-system, sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
+  background: #fafaf8;
+  color: #4a5568;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0e27;
+  background: #f5f1e8;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #00D9FF;
-  border-radius: 5px;
+  background: #a8b5a0;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #00B8D4;
+  background: #8a9a82;
 }
 
+/* Glass effect */
 .glass {
-  background: rgba(30, 41, 59, 0.5);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
-.gradient-text {
-  background: linear-gradient(to right, #00D9FF, #0EA5E9);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Zen card */
+.zen-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
+.zen-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+/* Button primary */
+.btn-zen {
+  background: linear-gradient(135deg, #a8b5a0, #6b7b8c);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(168, 181, 160, 0.3);
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
-.glow {
-  box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+.btn-zen:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(168, 181, 160, 0.4);
 }
 
-.glow-hover:hover {
-  box-shadow: 0 0 30px rgba(0, 217, 255, 0.5);
-  transition: box-shadow 0.3s ease;
+.btn-zen:active {
+  transform: translateY(0);
 }
