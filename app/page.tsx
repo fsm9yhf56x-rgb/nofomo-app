@@ -8,6 +8,7 @@ import KnightAvatar from '@/components/KnightAvatar'
 import XPBar from '@/components/XPBar'
 import FlameStreak from '@/components/FlameStreak'
 import CreateRuleForm from '@/components/CreateRuleForm'
+import ProtectionCard from '@/components/ProtectionCard'
 import { createClient } from '@/utils/supabase/client'
 
 export default function Dashboard() {
@@ -19,6 +20,7 @@ export default function Dashboard() {
   })
   const [rulesCount, setRulesCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [protections, setProtections] = useState<any[]>([])
 
   // Fetch user profile and rules
   useEffect(() => {
@@ -48,14 +50,16 @@ const loadUserData = async () => {
       })
     }
 
-    // Get rules count by wallet address
-    const { count } = await supabase
-      .from('protection_rules')
-      .select('*', { count: 'exact', head: true })
-      .eq('wallet_address', walletAddress)
-      .eq('is_active', true)
+    // Get rules with full data
+  const { data: rules, count } = await supabase
+    .from('protection_rules')
+    .select('*', { count: 'exact' })
+    .eq('wallet_address', walletAddress)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false })
 
-    setRulesCount(count || 0)
+  setProtections(rules || [])
+  setRulesCount(count || 0)
     setLoading(false)
   }
 
@@ -183,6 +187,25 @@ const loadUserData = async () => {
             <div className="text-sm text-slate-500">Demons status</div>
           </div>
         </motion.div>
+        
+        {/* Active Protections List */}
+        {protections.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="space-y-4"
+          >
+            <h3 className="text-xl font-semibold text-slate-700 flex items-center gap-2">
+              🛡️ Your Active Protections
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {protections.map((protection) => (
+                <ProtectionCard key={protection.id} protection={protection} />
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* CTA */}
         <motion.div
