@@ -53,13 +53,13 @@ export default function DemonsPage() {
       setDemons(demonData)
       
       // Calculate stats
-      const byType = demonData.reduce((acc, demon) => {
+      const byType: Record<string, number> = demonData.reduce((acc, demon) => {
         acc[demon.demon_type] = (acc[demon.demon_type] || 0) + 1
         return acc
       }, {} as Record<string, number>)
       
-      const mostActive = Object.entries(byType).sort((a, b) => b[1] - a[1])[0]?.[0] || 'none'
-      
+      const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1])
+      const mostActive = sortedTypes.length > 0 ? sortedTypes[0][0] : 'none'
       // Analyze by day of week
       const byDay = demonData.reduce((acc, demon) => {
         const day = new Date(demon.created_at).toLocaleDateString('en-US', { weekday: 'long' })
