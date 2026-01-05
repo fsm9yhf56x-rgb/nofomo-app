@@ -159,12 +159,12 @@ export default function Dashboard() {
         >
           <div className="text-6xl mb-4">🏰</div>
           <h1 className="text-3xl font-semibold text-slate-700">
-            Welcome to NoFOMO
+            WELCOME TO NOFOMO
           </h1>
-          <p className="text-slate-600">
+          <p className="text-slate-600 normal-case tracking-normal">
             A haven of peace to protect your crypto gains
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 normal-case tracking-normal">
             Combat your emotions, not the market
           </p>
           <div className="pt-4">
@@ -180,11 +180,11 @@ export default function Dashboard() {
       <header className="glass border-b border-slate-100 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="text-2xl font-semibold text-slate-700">
-            🏰 NoFOMO
+            🏰 NOFOMO
           </div>
           <div className="flex items-center gap-4">
-            <button className="text-slate-600 hover:text-slate-800 transition-colors">
-              ☕ Zen Mode
+            <button className="text-slate-600 hover:text-slate-800 transition-colors text-sm">
+              ☕ ZEN MODE
             </button>
             <ConnectButton />
           </div>
@@ -194,11 +194,13 @@ export default function Dashboard() {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-12 gap-6">
           
+          {/* LEFT SIDEBAR - RPG Style */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="col-span-12 md:col-span-3 space-y-4"
           >
+            {/* Knight Avatar */}
             <div className="zen-card p-6 aspect-square flex flex-col items-center justify-center">
               <KnightAvatar level={userProfile.level} />
               <div className="mt-4 w-full">
@@ -208,24 +210,38 @@ export default function Dashboard() {
                 />
               </div>
             </div>
+
+            {/* Demons Vertical Card */}
+            {address && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <DemonCounter walletAddress={address} />
+              </motion.div>
+            )}
           </motion.div>
 
+          {/* RIGHT CONTENT */}
           <div className="col-span-12 md:col-span-9 space-y-4">
             
+            {/* Greeting + Flame */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="flex items-center justify-between"
             >
               <div>
-                <h2 className="text-2xl font-medium text-slate-700">
-                  Good morning, Knight 🌿
+                <h2 className="text-2xl font-semibold text-slate-700">
+                  GOOD MORNING, KNIGHT 🌿
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 normal-case tracking-normal">
                   Your protections are active
                 </p>
               </div>
               
+              {/* Compact Flame */}
               <div className="flex items-center gap-3 bg-beige-50 rounded-xl px-4 py-2">
                 <motion.div
                   className="text-3xl"
@@ -236,13 +252,14 @@ export default function Dashboard() {
                 </motion.div>
                 <div>
                   <div className="text-lg font-semibold text-slate-700">
-                    {userProfile.streak_days} days
+                    {userProfile.streak_days} DAYS
                   </div>
-                  <div className="text-xs text-slate-500">Keep going 💙</div>
+                  <div className="text-xs text-slate-500 normal-case tracking-normal">Keep going 💙</div>
                 </div>
               </div>
             </motion.div>
 
+            {/* Compact Stats */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -252,50 +269,32 @@ export default function Dashboard() {
               <div className="zen-card p-4 text-center">
                 <div className="text-2xl mb-1">💎</div>
                 <div className="text-lg font-semibold text-slate-700">$0</div>
-                <div className="text-xs text-slate-500">Gains</div>
+                <div className="text-xs text-slate-500">GAINS</div>
               </div>
               
               <div className="zen-card p-4 text-center">
                 <div className="text-2xl mb-1">🛡️</div>
                 <div className="text-lg font-semibold text-slate-700">{rulesCount}</div>
-                <div className="text-xs text-slate-500">Protections</div>
+                <div className="text-xs text-slate-500">PROTECTIONS</div>
               </div>
               
               <div className="zen-card p-4 text-center">
                 <div className="text-2xl mb-1">👻</div>
-                <div className="text-lg font-semibold text-slate-700">Quiet</div>
-                <div className="text-xs text-slate-500">Demons</div>
+                <div className="text-lg font-semibold text-slate-700">QUIET</div>
+                <div className="text-xs text-slate-500">DEMONS</div>
               </div>
             </motion.div>
 
-            {address && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <DemonCounter walletAddress={address} />
-              </motion.div>
-            )}
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-center pt-4"
-            >
-              <CreateRuleForm onSuccess={loadUserData} />
-            </motion.div>
-
+            {/* Active Protections */}
             {protections.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.3 }}
                 className="space-y-3"
               >
                 <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
-                  🛡️ Your Active Protections
+                  🛡️ YOUR ACTIVE PROTECTIONS
                 </h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                   {protections.map((protection) => (
@@ -308,6 +307,19 @@ export default function Dashboard() {
                 </div>
               </motion.div>
             )}
+
+            {/* CTA - After protections */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-center pt-4"
+            >
+              <CreateRuleForm 
+                onSuccess={loadUserData} 
+                hasProtections={protections.length > 0}
+              />
+            </motion.div>
 
           </div>
         </div>

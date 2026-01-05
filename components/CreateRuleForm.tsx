@@ -7,9 +7,10 @@ import { useAccount } from 'wagmi'
 
 interface CreateRuleFormProps {
   onSuccess: () => void
+  hasProtections?: boolean
 }
 
-export default function CreateRuleForm({ onSuccess }: CreateRuleFormProps) {
+export default function CreateRuleForm({ onSuccess, hasProtections }: CreateRuleFormProps) {
   const { address } = useAccount()
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -93,11 +94,11 @@ export default function CreateRuleForm({ onSuccess }: CreateRuleFormProps) {
 
   return (
     <>
-      <button
+    <button
         onClick={() => setIsOpen(true)}
         className="btn-zen text-lg px-8 py-4"
       >
-        + Create your first protection
+        {hasProtections ? 'CREATE PROTECTION' : 'CREATE YOUR FIRST PROTECTION'}
       </button>
 
       <AnimatePresence>
