@@ -26,7 +26,13 @@ export default function CreateRuleForm({ onSuccess }: CreateRuleFormProps) {
 
     try {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+if (authError || !user) {
+  console.error('Auth error:', authError)
+  alert('Please refresh the page and reconnect your wallet')
+  return
+}
       
       if (!user) return
 
