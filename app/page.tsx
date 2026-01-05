@@ -10,6 +10,7 @@ import FlameStreak from '@/components/FlameStreak'
 import CreateRuleForm from '@/components/CreateRuleForm'
 import ProtectionCard from '@/components/ProtectionCard'
 import { createClient } from '@/utils/supabase/client'
+import DemonCounter from '@/components/DemonCounter'
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount()
@@ -254,6 +255,17 @@ const loadUserData = async () => {
                 />
               ))}
             </div>
+          </motion.div>
+        )}
+
+{/* Demon Counter */}
+        {address && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <DemonCounter walletAddress={address} />
           </motion.div>
         )}
 
