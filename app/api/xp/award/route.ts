@@ -4,26 +4,24 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { action, xp, wallet_address } = await request.json()
     
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!wallet_address) {
+      return NextResponse.json({ error: 'Wallet address required' }, { status: 400 })
     }
-
-    const { action, xp } = await request.json()
 
     // Get or create user profile
     let { data: profile } = await supabase
       .from('user_profile')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('wallet_address', wallet_address)
       .single()
 
     if (!profile) {
       const { data: newProfile } = await supabase
         .from('user_profile')
         .insert({ 
-          user_id: user.id, 
+          wallet_address: wallet_address,
           xp: 0, 
           level: 1,
           streak_days: 0 
@@ -45,7 +43,7 @@ export async function POST(request: Request) {
         level: newLevel,
         updated_at: new Date().toISOString()
       })
-      .eq('user_id', user.id)
+      .eq('wallet_address', wallet_address)
 
     return NextResponse.json({ 
       success: true,

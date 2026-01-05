@@ -27,17 +27,17 @@ export default function Dashboard() {
     }
   }, [isConnected, address])
 
-  const loadUserData = async () => {
-    const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+const loadUserData = async () => {
+    if (!address) return
     
-    if (!user) return
+    const supabase = createClient()
+    const walletAddress = address.toLowerCase()
 
-    // Get profile
+    // Get profile by wallet address
     const { data: profile } = await supabase
       .from('user_profile')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('wallet_address', walletAddress)
       .single()
 
     if (profile) {
@@ -48,11 +48,11 @@ export default function Dashboard() {
       })
     }
 
-    // Get rules count
+    // Get rules count by wallet address
     const { count } = await supabase
       .from('protection_rules')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id)
+      .eq('wallet_address', walletAddress)
       .eq('is_active', true)
 
     setRulesCount(count || 0)

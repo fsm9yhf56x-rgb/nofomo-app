@@ -3,12 +3,14 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { createClient } from '@/utils/supabase/client'
+import { useAccount } from 'wagmi'
 
 interface CreateRuleFormProps {
   onSuccess: () => void
 }
 
 export default function CreateRuleForm({ onSuccess }: CreateRuleFormProps) {
+  const { address } = useAccount()
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -26,21 +28,19 @@ export default function CreateRuleForm({ onSuccess }: CreateRuleFormProps) {
 
     try {
       const supabase = createClient()
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
       
-if (authError || !user) {
-  console.error('Auth error:', authError)
-  alert('Please refresh the page and reconnect your wallet')
-  return
-}
-      
-      if (!user) return
+      // Use wallet address directly (no Supabase auth needed)
+      if (!address) {
+        alert('Please connect your wallet')
+        setLoading(false)
+        return
+      }
 
       // Create rule
       const { error } = await supabase
         .from('protection_rules')
         .insert({
-          user_id: user.id,
+          wallet_address: address.toLowerCase(),
           token_pair: formData.tokenPair,
           action_type: formData.actionType,
           trigger_price: parseFloat(formData.triggerPrice),
@@ -48,20 +48,31 @@ if (authError || !user) {
           is_active: true
         })
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase error:', error)
+        throw error
+      }
 
       // Award XP
       await fetch('/api/xp/award', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'first_rule_created', xp: 50 })
+        body: JSON.stringify({ 
+          action: 'first_rule_created', 
+          xp: 50,
+          wallet_address: address.toLowerCase()
+        })
       })
 
       // Award points (invisible)
       await fetch('/api/points/award', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'rule_created', points: 25 })
+        body: JSON.stringify({ 
+          action: 'rule_created', 
+          points: 25,
+          wallet_address: address.toLowerCase()
+        })
       })
 
       // Show success animation

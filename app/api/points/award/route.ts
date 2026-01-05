@@ -4,25 +4,27 @@ import { NextResponse } from 'next/server'
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { action, points, wallet_address } = await request.json()
     
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (!wallet_address) {
+      return NextResponse.json({ error: 'Wallet address required' }, { status: 400 })
     }
-
-    const { action, points } = await request.json()
 
     // Get or create points tracker
     let { data: tracker } = await supabase
       .from('points_tracker')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('wallet_address', wallet_address)
       .single()
 
     if (!tracker) {
       const { data: newTracker } = await supabase
         .from('points_tracker')
-        .insert({ user_id: user.id, total_points: 0, activities: {} })
+        .insert({ 
+          wallet_address: wallet_address,
+          total_points: 0, 
+          activities: {} 
+        })
         .select()
         .single()
       tracker = newTracker
@@ -39,9 +41,8 @@ export async function POST(request: Request) {
         activities: activities,
         updated_at: new Date().toISOString()
       })
-      .eq('user_id', user.id)
+      .eq('wallet_address', wallet_address)
 
-    // Don't return points to frontend (keep it secret)
     return NextResponse.json({ success: true })
 
   } catch (error) {
