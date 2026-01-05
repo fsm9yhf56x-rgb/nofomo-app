@@ -22,8 +22,8 @@ export default function DemonsPage() {
   const [stats, setStats] = useState({
     total: 0,
     byType: {} as Record<string, number>,
-    mostActive: '',
-    mostActiveDay: '',
+    mostActive: 'none',
+    mostActiveDay: 'Unknown',
     peakHour: 0
   })
 
@@ -42,7 +42,6 @@ export default function DemonsPage() {
     
     const supabase = createClient()
     
-    // Get all demons
     const { data: demonData } = await supabase
       .from('demon_tracker')
       .select('*')
@@ -52,31 +51,34 @@ export default function DemonsPage() {
     if (demonData && demonData.length > 0) {
       setDemons(demonData)
       
-      // Calculate stats
-      const byType: Record<string, number> = demonData.reduce((acc, demon) => {
-        acc[demon.demon_type] = (acc[demon.demon_type] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
+      // Calculate type stats
+      const byType: Record<string, number> = {}
+      demonData.forEach(demon => {
+        byType[demon.demon_type] = (byType[demon.demon_type] || 0) + 1
+      })
       
       const sortedTypes = Object.entries(byType).sort((a, b) => b[1] - a[1])
       const mostActive = sortedTypes.length > 0 ? sortedTypes[0][0] : 'none'
-      // Analyze by day of week
-      const byDay = demonData.reduce((acc, demon) => {
+      
+      // Calculate day stats
+      const byDay: Record<string, number> = {}
+      demonData.forEach(demon => {
         const day = new Date(demon.created_at).toLocaleDateString('en-US', { weekday: 'long' })
-        acc[day] = (acc[day] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
+        byDay[day] = (byDay[day] || 0) + 1
+      })
       
-      const mostActiveDay = Object.entries(byDay).sort((a, b) => b[1] - a[1])[0]?.[0] || 'Unknown'
+      const sortedDays = Object.entries(byDay).sort((a, b) => b[1] - a[1])
+      const mostActiveDay = sortedDays.length > 0 ? sortedDays[0][0] : 'Unknown'
       
-      // Analyze by hour
-      const byHour = demonData.reduce((acc, demon) => {
+      // Calculate hour stats
+      const byHour: Record<number, number> = {}
+      demonData.forEach(demon => {
         const hour = new Date(demon.created_at).getHours()
-        acc[hour] = (acc[hour] || 0) + 1
-        return acc
-      }, {} as Record<number, number>)
+        byHour[hour] = (byHour[hour] || 0) + 1
+      })
       
-      const peakHour = parseInt(Object.entries(byHour).sort((a, b) => b[1] - a[1])[0]?.[0] || '0')
+      const sortedHours = Object.entries(byHour).sort((a, b) => b[1] - a[1])
+      const peakHour = sortedHours.length > 0 ? parseInt(sortedHours[0][0]) : 0
       
       setStats({
         total: demonData.length,
@@ -137,7 +139,6 @@ export default function DemonsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-beige-50 via-white to-lavender-50">
-      {/* Header */}
       <header className="glass border-b border-slate-100 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <button
@@ -153,7 +154,6 @@ export default function DemonsPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-12 space-y-8">
-        {/* Stats Overview */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -179,7 +179,6 @@ export default function DemonsPage() {
           </div>
         </motion.div>
 
-        {/* Insights */}
         {demons.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -201,7 +200,6 @@ export default function DemonsPage() {
           </motion.div>
         )}
 
-        {/* History */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
