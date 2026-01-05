@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { createClient } from '@/utils/supabase/client'
@@ -9,6 +10,7 @@ interface DemonCounterProps {
 }
 
 export default function DemonCounter({ walletAddress }: DemonCounterProps) {
+  const router = useRouter()
   const [demonStats, setDemonStats] = useState({
     total: 0,
     byType: {
@@ -126,7 +128,10 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
       {/* View Details Link */}
       {demonStats.total > 0 && (
         <div className="text-center pt-2">
-          <button className="text-xs text-sage-600 hover:text-sage-700 transition-colors">
+          <button 
+            onClick={() => router.push('/demons')}
+            className="text-xs text-sage-600 hover:text-sage-700 transition-colors"
+          >
             View detailed history →
           </button>
         </div>
