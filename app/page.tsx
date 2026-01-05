@@ -192,7 +192,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-beige-50 via-white to-lavender-50">
       {/* Header */}
       <header className="glass border-b border-slate-100 px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="text-2xl font-semibold text-slate-700">
             🏰 NoFOMO
           </div>
@@ -206,115 +206,135 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-12 space-y-8">
-        {/* Greeting */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <h2 className="text-3xl font-medium text-slate-700 mb-2">
-            Good morning, Knight 🌿
-          </h2>
-          <p className="text-slate-500">
-            Your protections are active and watching
-          </p>
-        </motion.div>
-
-        {/* Knight Avatar Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="zen-card p-8"
-        >
-          <KnightAvatar level={userProfile.level} />
-          <div className="mt-6">
-            <XPBar 
-              current={userProfile.xp} 
-              max={userProfile.level * 1000} 
-            />
-          </div>
-        </motion.div>
-
-        {/* Flame Streak */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <FlameStreak days={userProfile.streak_days} />
-        </motion.div>
-
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
-          <div className="zen-card p-6 text-center">
-            <div className="text-3xl mb-2">💎</div>
-            <div className="text-2xl font-semibold text-slate-700">$0</div>
-            <div className="text-sm text-slate-500">Gains protected</div>
-          </div>
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid grid-cols-12 gap-6">
           
-          <div className="zen-card p-6 text-center">
-            <div className="text-3xl mb-2">🛡️</div>
-            <div className="text-2xl font-semibold text-slate-700">{rulesCount}</div>
-            <div className="text-sm text-slate-500">Active protections</div>
-          </div>
-          
-          <div className="zen-card p-6 text-center">
-            <div className="text-3xl mb-2">👻</div>
-            <div className="text-2xl font-semibold text-slate-700">Quiet</div>
-            <div className="text-sm text-slate-500">Demons status</div>
-          </div>
-        </motion.div>
-
-        {/* Active Protections List */}
-        {protections.length > 0 && (
+          {/* LEFT SIDEBAR - Knight Card (RPG Style) */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="space-y-4"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="col-span-12 md:col-span-3 space-y-4"
           >
-            <h3 className="text-xl font-semibold text-slate-700 flex items-center gap-2">
-              🛡️ Your Active Protections
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {protections.map((protection) => (
-                <ProtectionCard 
-                  key={protection.id} 
-                  protection={protection}
-                  onDisable={handleDisableProtection}
+            {/* Knight Avatar Box */}
+            <div className="zen-card p-6 aspect-square flex flex-col items-center justify-center">
+              <KnightAvatar level={userProfile.level} />
+              <div className="mt-4 w-full">
+                <XPBar 
+                  current={userProfile.xp} 
+                  max={userProfile.level * 1000} 
                 />
-              ))}
+              </div>
             </div>
           </motion.div>
-        )}
 
-        {/* Demon Counter */}
-        {address && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <DemonCounter walletAddress={address} />
-          </motion.div>
-        )}
+          {/* RIGHT CONTENT */}
+          <div className="col-span-12 md:col-span-9 space-y-4">
+            
+            {/* Greeting + Flame */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between"
+            >
+              <div>
+                <h2 className="text-2xl font-medium text-slate-700">
+                  Good morning, Knight 🌿
+                </h2>
+                <p className="text-sm text-slate-500">
+                  Your protections are active
+                </p>
+              </div>
+              
+              {/* Compact Flame Streak */}
+              <div className="flex items-center gap-3 bg-beige-50 rounded-xl px-4 py-2">
+                <motion.div
+                  className="text-3xl"
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  🔥
+                </motion.div>
+                <div>
+                  <div className="text-lg font-semibold text-slate-700">
+                    {userProfile.streak_days} days
+                  </div>
+                  <div className="text-xs text-slate-500">Keep going 💙</div>
+                </div>
+              </div>
+            </motion.div>
 
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="text-center"
-        >
-          <CreateRuleForm onSuccess={loadUserData} />
-        </motion.div>
+            {/* Compact Stats Row */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="grid grid-cols-3 gap-3"
+            >
+              <div className="zen-card p-4 text-center">
+                <div className="text-2xl mb-1">💎</div>
+                <div className="text-lg font-semibold text-slate-700">$0</div>
+                <div className="text-xs text-slate-500">Gains</div>
+              </div>
+              
+              <div className="zen-card p-4 text-center">
+                <div className="text-2xl mb-1">🛡️</div>
+                <div className="text-lg font-semibold text-slate-700">{rulesCount}</div>
+                <div className="text-xs text-slate-500">Protections</div>
+              </div>
+              
+              <div className="zen-card p-4 text-center">
+                <div className="text-2xl mb-1">👻</div>
+                <div className="text-lg font-semibold text-slate-700">Quiet</div>
+                <div className="text-xs text-slate-500">Demons</div>
+              </div>
+            </motion.div>
+
+            {/* Demon Counter Compact */}
+            {address && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <DemonCounter walletAddress={address} />
+              </motion.div>
+            )}
+
+            {/* Active Protections */}
+            {protections.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="space-y-3"
+              >
+                <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
+                  🛡️ Your Active Protections
+                </h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                  {protections.map((protection) => (
+                    <ProtectionCard 
+                      key={protection.id} 
+                      protection={protection}
+                      onDisable={handleDisableProtection}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-center pt-4"
+            >
+              <CreateRuleForm onSuccess={loadUserData} />
+            </motion.div>
+
+          </div>
+        </div>
       </main>
 
       {/* Intervention Modal */}
