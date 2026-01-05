@@ -58,7 +58,7 @@ export default function DemonsPage() {
         return acc
       }, {} as Record<string, number>)
       
-      const mostActive = Object.entries(byType).sort((a, b) => b[1] - a[1])[0][0]
+      const mostActive = Object.entries(byType).sort((a, b) => b[1] - a[1])[0]?.[0] || 'none'
       
       // Analyze by day of week
       const byDay = demonData.reduce((acc, demon) => {
