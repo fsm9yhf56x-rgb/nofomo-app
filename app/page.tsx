@@ -9,8 +9,10 @@ import XPBar from '@/components/XPBar'
 import FlameStreak from '@/components/FlameStreak'
 import CreateRuleForm from '@/components/CreateRuleForm'
 import ProtectionCard from '@/components/ProtectionCard'
-import { createClient } from '@/utils/supabase/client'
 import DemonCounter from '@/components/DemonCounter'
+import LevelUpModal from '@/components/LevelUpModal'
+import { createClient } from '@/utils/supabase/client'
+
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount()
@@ -22,6 +24,8 @@ export default function Dashboard() {
   const [rulesCount, setRulesCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [protections, setProtections] = useState<any[]>([])
+  const [showLevelUp, setShowLevelUp] = useState(false)
+  const [previousLevel, setPreviousLevel] = useState(1)
 
   // Fetch user profile and rules
   useEffect(() => {
@@ -43,7 +47,13 @@ const loadUserData = async () => {
       .eq('wallet_address', walletAddress)
       .single()
 
-    if (profile) {
+       if (profile) {
+      // Check for level up
+      if (profile.level > previousLevel && previousLevel > 0) {
+        setShowLevelUp(true)
+      }
+      setPreviousLevel(profile.level)
+      
       setUserProfile({
         level: profile.level,
         xp: profile.xp,
@@ -279,6 +289,13 @@ const loadUserData = async () => {
           <CreateRuleForm onSuccess={loadUserData} />
         </motion.div>
       </main>
+
+      {/* Level Up Modal */}
+      <LevelUpModal 
+        show={showLevelUp}
+        newLevel={userProfile.level}
+        onClose={() => setShowLevelUp(false)}
+      />
     </div>
   )
 }
