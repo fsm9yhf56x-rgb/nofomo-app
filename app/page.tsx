@@ -7,6 +7,8 @@ import { motion } from 'framer-motion'
 import KnightAvatar from '@/components/KnightAvatar'
 import XPBar from '@/components/XPBar'
 import FlameStreak from '@/components/FlameStreak'
+import CreateRuleForm from '@/components/CreateRuleForm'
+import { createClient } from '@/utils/supabase/client'
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount()
@@ -15,11 +17,51 @@ export default function Dashboard() {
     xp: 0,
     streak_days: 0
   })
+  const [rulesCount, setRulesCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  // Fetch user profile and rules
+  useEffect(() => {
+    if (isConnected && address) {
+      loadUserData()
+    }
+  }, [isConnected, address])
+
+  const loadUserData = async () => {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) return
+
+    // Get profile
+    const { data: profile } = await supabase
+      .from('user_profile')
+      .select('*')
+      .eq('user_id', user.id)
+      .single()
+
+    if (profile) {
+      setUserProfile({
+        level: profile.level,
+        xp: profile.xp,
+        streak_days: profile.streak_days
+      })
+    }
+
+    // Get rules count
+    const { count } = await supabase
+      .from('protection_rules')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+
+    setRulesCount(count || 0)
+    setLoading(false)
+  }
 
   // Award points on wallet connect
   useEffect(() => {
     if (isConnected && address) {
-      // Call API to award points for connecting wallet
       fetch('/api/points/award', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -131,7 +173,7 @@ export default function Dashboard() {
           
           <div className="zen-card p-6 text-center">
             <div className="text-3xl mb-2">🛡️</div>
-            <div className="text-2xl font-semibold text-slate-700">0</div>
+            <div className="text-2xl font-semibold text-slate-700">{rulesCount}</div>
             <div className="text-sm text-slate-500">Active protections</div>
           </div>
           
@@ -149,9 +191,7 @@ export default function Dashboard() {
           transition={{ delay: 0.5 }}
           className="text-center"
         >
-          <button className="btn-zen text-lg px-8 py-4">
-            + Create your first protection
-          </button>
+          <CreateRuleForm onSuccess={loadUserData} />
         </motion.div>
       </main>
     </div>
