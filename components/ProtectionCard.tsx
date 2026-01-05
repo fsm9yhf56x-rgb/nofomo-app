@@ -1,6 +1,7 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Protection {
   id: string
@@ -14,9 +15,20 @@ interface Protection {
 
 interface ProtectionCardProps {
   protection: Protection
+  onDisable: (id: string) => void
 }
 
-export default function ProtectionCard({ protection }: ProtectionCardProps) {
+export default function ProtectionCard({ protection, onDisable }: ProtectionCardProps) {
+  const [showConfirm, setShowConfirm] = useState(false)
+  
+  const handleDisable = () => {
+    setShowConfirm(true)
+  }
+  
+  const confirmDisable = () => {
+    onDisable(protection.id)
+    setShowConfirm(false)
+  }
   const isProfit = protection.action_type === 'take_profit'
   
   // Calculate days active
@@ -82,10 +94,66 @@ export default function ProtectionCard({ protection }: ProtectionCardProps) {
           <span>✓</span>
           <span>Active and watching</span>
         </div>
-        <button className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
-          Edit
+        <button 
+          onClick={handleDisable}
+          className="text-xs text-slate-400 hover:text-red-500 transition-colors"
+        >
+          Disable
         </button>
       </div>
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50"
+            onClick={() => setShowConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="zen-card max-w-md p-8 space-y-6 m-4"
+            >
+              <div className="text-center">
+                <div className="text-5xl mb-4">💙</div>
+                <h3 className="text-xl font-semibold text-slate-700 mb-2">
+                  Pause a moment
+                </h3>
+                <p className="text-slate-600 text-sm">
+                  Your protection has been watching for {daysActive} {daysActive === 1 ? 'day' : 'days'}.
+                </p>
+                {daysActive === 0 && (
+                  <p className="text-amber-600 text-sm mt-2">
+                    💭 Disabling it so quickly might be your Impatience Demon acting up
+                  </p>
+                )}
+                <p className="text-slate-500 text-sm mt-4">
+                  Are you sure you want to disable this protection?
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="flex-1 px-4 py-3 rounded-lg bg-sage-400 text-white font-medium hover:bg-sage-500 transition-colors"
+                >
+                  Keep Protection 🛡️
+                </button>
+                <button
+                  onClick={confirmDisable}
+                  className="flex-1 px-4 py-3 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors text-sm"
+                >
+                  Yes, disable
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }

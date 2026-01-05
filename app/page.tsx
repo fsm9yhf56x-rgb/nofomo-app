@@ -63,6 +63,52 @@ const loadUserData = async () => {
     setLoading(false)
   }
 
+  const handleDisableProtection = async (protectionId: string) => {
+    if (!address) return
+    
+    const supabase = createClient()
+    
+    // Get protection to check age
+    const { data: protection } = await supabase
+      .from('protection_rules')
+      .select('*')
+      .eq('id', protectionId)
+      .single()
+    
+    if (!protection) return
+    
+    // Calculate hours active
+    const hoursActive = (Date.now() - new Date(protection.created_at).getTime()) / (1000 * 60 * 60)
+    
+    // Disable protection
+    await supabase
+      .from('protection_rules')
+      .update({ is_active: false })
+      .eq('id', protectionId)
+    
+    // Track demon if disabled too quickly (< 24h)
+    if (hoursActive < 24) {
+      await supabase
+        .from('demon_tracker')
+        .insert({
+          wallet_address: address.toLowerCase(),
+          demon_type: 'impatience',
+          severity: 'medium',
+          event_data: {
+            action: 'disabled_protection_early',
+            hours_active: hoursActive,
+            protection_id: protectionId
+          }
+        })
+      
+      // Show toast notification
+      alert('💭 Your Impatience Demon appeared! You disabled this protection after just ' + Math.floor(hoursActive) + ' hours.')
+    }
+    
+    // Reload data
+    loadUserData()
+  }
+
   // Award points on wallet connect
   useEffect(() => {
     if (isConnected && address) {
@@ -187,7 +233,7 @@ const loadUserData = async () => {
             <div className="text-sm text-slate-500">Demons status</div>
           </div>
         </motion.div>
-        
+
         {/* Active Protections List */}
         {protections.length > 0 && (
           <motion.div
@@ -201,7 +247,11 @@ const loadUserData = async () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {protections.map((protection) => (
-                <ProtectionCard key={protection.id} protection={protection} />
+                <ProtectionCard 
+                  key={protection.id} 
+                  protection={protection}
+                  onDisable={handleDisableProtection}
+                />
               ))}
             </div>
           </motion.div>
