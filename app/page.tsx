@@ -11,8 +11,8 @@ import CreateRuleForm from '@/components/CreateRuleForm'
 import ProtectionCard from '@/components/ProtectionCard'
 import DemonCounter from '@/components/DemonCounter'
 import LevelUpModal from '@/components/LevelUpModal'
+import InterventionModal from '@/components/InterventionModal'
 import { createClient } from '@/utils/supabase/client'
-
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount()
@@ -26,6 +26,12 @@ export default function Dashboard() {
   const [protections, setProtections] = useState<any[]>([])
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [previousLevel, setPreviousLevel] = useState(1)
+  const [showIntervention, setShowIntervention] = useState(false)
+  const [interventionData, setInterventionData] = useState({
+    demonType: '',
+    context: '',
+    protectionId: ''
+  })
 
   // Fetch user profile and rules
   useEffect(() => {
@@ -34,20 +40,20 @@ export default function Dashboard() {
     }
   }, [isConnected, address])
 
-const loadUserData = async () => {
+  const loadUserData = async () => {
     if (!address) return
     
     const supabase = createClient()
     const walletAddress = address.toLowerCase()
 
-    // Get profile by wallet address
+    // Get profile
     const { data: profile } = await supabase
       .from('user_profile')
       .select('*')
       .eq('wallet_address', walletAddress)
       .single()
 
-       if (profile) {
+    if (profile) {
       // Check for level up
       if (profile.level > previousLevel && previousLevel > 0) {
         setShowLevelUp(true)
@@ -62,15 +68,15 @@ const loadUserData = async () => {
     }
 
     // Get rules with full data
-  const { data: rules, count } = await supabase
-    .from('protection_rules')
-    .select('*', { count: 'exact' })
-    .eq('wallet_address', walletAddress)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false })
+    const { data: rules, count } = await supabase
+      .from('protection_rules')
+      .select('*', { count: 'exact' })
+      .eq('wallet_address', walletAddress)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
 
-  setProtections(rules || [])
-  setRulesCount(count || 0)
+    setProtections(rules || [])
+    setRulesCount(count || 0)
     setLoading(false)
   }
 
@@ -91,12 +97,6 @@ const loadUserData = async () => {
     // Calculate hours active
     const hoursActive = (Date.now() - new Date(protection.created_at).getTime()) / (1000 * 60 * 60)
     
-    // Disable protection
-    await supabase
-      .from('protection_rules')
-      .update({ is_active: false })
-      .eq('id', protectionId)
-    
     // Track demon if disabled too quickly (< 24h)
     if (hoursActive < 24) {
       await supabase
@@ -112,11 +112,38 @@ const loadUserData = async () => {
           }
         })
       
-      // Show toast notification
-      alert('💭 Your Impatience Demon appeared! You disabled this protection after just ' + Math.floor(hoursActive) + ' hours.')
+      // Show gentle intervention instead of alert
+      setInterventionData({
+        demonType: 'impatience',
+        context: `You're disabling this protection after just ${Math.floor(hoursActive)} hours.`,
+        protectionId: protectionId
+      })
+      setShowIntervention(true)
+      return // Don't disable yet
     }
     
-    // Reload data
+    // If >= 24h, disable directly
+    await supabase
+      .from('protection_rules')
+      .update({ is_active: false })
+      .eq('id', protectionId)
+    
+    loadUserData()
+  }
+
+  const handleInterventionAccept = () => {
+    setShowIntervention(false)
+    // User chose to keep protection - do nothing
+  }
+
+  const handleInterventionDismiss = async () => {
+    setShowIntervention(false)
+    // User insists on disabling
+    const supabase = createClient()
+    await supabase
+      .from('protection_rules')
+      .update({ is_active: false })
+      .eq('id', interventionData.protectionId)
     loadUserData()
   }
 
@@ -268,7 +295,7 @@ const loadUserData = async () => {
           </motion.div>
         )}
 
-{/* Demon Counter */}
+        {/* Demon Counter */}
         {address && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -289,6 +316,15 @@ const loadUserData = async () => {
           <CreateRuleForm onSuccess={loadUserData} />
         </motion.div>
       </main>
+
+      {/* Intervention Modal */}
+      <InterventionModal
+        show={showIntervention}
+        demonType={interventionData.demonType}
+        context={interventionData.context}
+        onAccept={handleInterventionAccept}
+        onDismiss={handleInterventionDismiss}
+      />
 
       {/* Level Up Modal */}
       <LevelUpModal 
