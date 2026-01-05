@@ -6,7 +6,6 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { motion } from 'framer-motion'
 import KnightAvatar from '@/components/KnightAvatar'
 import XPBar from '@/components/XPBar'
-import FlameStreak from '@/components/FlameStreak'
 import CreateRuleForm from '@/components/CreateRuleForm'
 import ProtectionCard from '@/components/ProtectionCard'
 import DemonCounter from '@/components/DemonCounter'
@@ -33,7 +32,6 @@ export default function Dashboard() {
     protectionId: ''
   })
 
-  // Fetch user profile and rules
   useEffect(() => {
     if (isConnected && address) {
       loadUserData()
@@ -46,7 +44,6 @@ export default function Dashboard() {
     const supabase = createClient()
     const walletAddress = address.toLowerCase()
 
-    // Get profile
     const { data: profile } = await supabase
       .from('user_profile')
       .select('*')
@@ -54,7 +51,6 @@ export default function Dashboard() {
       .single()
 
     if (profile) {
-      // Check for level up
       if (profile.level > previousLevel && previousLevel > 0) {
         setShowLevelUp(true)
       }
@@ -67,7 +63,6 @@ export default function Dashboard() {
       })
     }
 
-    // Get rules with full data
     const { data: rules, count } = await supabase
       .from('protection_rules')
       .select('*', { count: 'exact' })
@@ -85,7 +80,6 @@ export default function Dashboard() {
     
     const supabase = createClient()
     
-    // Get protection to check age
     const { data: protection } = await supabase
       .from('protection_rules')
       .select('*')
@@ -94,10 +88,8 @@ export default function Dashboard() {
     
     if (!protection) return
     
-    // Calculate hours active
     const hoursActive = (Date.now() - new Date(protection.created_at).getTime()) / (1000 * 60 * 60)
     
-    // Track demon if disabled too quickly (< 24h)
     if (hoursActive < 24) {
       await supabase
         .from('demon_tracker')
@@ -112,17 +104,15 @@ export default function Dashboard() {
           }
         })
       
-      // Show gentle intervention instead of alert
       setInterventionData({
         demonType: 'impatience',
         context: `You're disabling this protection after just ${Math.floor(hoursActive)} hours.`,
         protectionId: protectionId
       })
       setShowIntervention(true)
-      return // Don't disable yet
+      return
     }
     
-    // If >= 24h, disable directly
     await supabase
       .from('protection_rules')
       .update({ is_active: false })
@@ -133,12 +123,10 @@ export default function Dashboard() {
 
   const handleInterventionAccept = () => {
     setShowIntervention(false)
-    // User chose to keep protection - do nothing
   }
 
   const handleInterventionDismiss = async () => {
     setShowIntervention(false)
-    // User insists on disabling
     const supabase = createClient()
     await supabase
       .from('protection_rules')
@@ -147,7 +135,6 @@ export default function Dashboard() {
     loadUserData()
   }
 
-  // Award points on wallet connect
   useEffect(() => {
     if (isConnected && address) {
       fetch('/api/points/award', {
@@ -190,7 +177,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-beige-50 via-white to-lavender-50">
-      {/* Header */}
       <header className="glass border-b border-slate-100 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="text-2xl font-semibold text-slate-700">
@@ -205,17 +191,14 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-12 gap-6">
           
-          {/* LEFT SIDEBAR - Knight Card (RPG Style) */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="col-span-12 md:col-span-3 space-y-4"
           >
-            {/* Knight Avatar Box */}
             <div className="zen-card p-6 aspect-square flex flex-col items-center justify-center">
               <KnightAvatar level={userProfile.level} />
               <div className="mt-4 w-full">
@@ -227,10 +210,8 @@ export default function Dashboard() {
             </div>
           </motion.div>
 
-          {/* RIGHT CONTENT */}
           <div className="col-span-12 md:col-span-9 space-y-4">
             
-            {/* Greeting + Flame */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -245,7 +226,6 @@ export default function Dashboard() {
                 </p>
               </div>
               
-              {/* Compact Flame Streak */}
               <div className="flex items-center gap-3 bg-beige-50 rounded-xl px-4 py-2">
                 <motion.div
                   className="text-3xl"
@@ -263,7 +243,6 @@ export default function Dashboard() {
               </div>
             </motion.div>
 
-            {/* Compact Stats Row */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -289,7 +268,6 @@ export default function Dashboard() {
               </div>
             </motion.div>
 
-            {/* Demon Counter Compact */}
             {address && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -300,12 +278,20 @@ export default function Dashboard() {
               </motion.div>
             )}
 
-            {/* Active Protections */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-center pt-4"
+            >
+              <CreateRuleForm onSuccess={loadUserData} />
+            </motion.div>
+
             {protections.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.4 }}
                 className="space-y-3"
               >
                 <h3 className="text-lg font-semibold text-slate-700 flex items-center gap-2">
@@ -323,21 +309,10 @@ export default function Dashboard() {
               </motion.div>
             )}
 
-            {/* CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-center pt-4"
-            >
-              <CreateRuleForm onSuccess={loadUserData} />
-            </motion.div>
-
           </div>
         </div>
       </main>
 
-      {/* Intervention Modal */}
       <InterventionModal
         show={showIntervention}
         demonType={interventionData.demonType}
@@ -346,7 +321,6 @@ export default function Dashboard() {
         onDismiss={handleInterventionDismiss}
       />
 
-      {/* Level Up Modal */}
       <LevelUpModal 
         show={showLevelUp}
         newLevel={userProfile.level}
