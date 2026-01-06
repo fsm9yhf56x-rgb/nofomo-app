@@ -1,7 +1,7 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { createClient } from '@/utils/supabase/client'
 
@@ -9,9 +9,20 @@ interface DemonCounterProps {
   walletAddress: string
 }
 
+interface DemonStats {
+  total: number
+  byType: {
+    fomo: number
+    greed: number
+    impatience: number
+    revenge: number
+    fear: number
+  }
+}
+
 export default function DemonCounter({ walletAddress }: DemonCounterProps) {
   const router = useRouter()
-  const [demonStats, setDemonStats] = useState({
+  const [demonStats, setDemonStats] = useState<DemonStats>({
     total: 0,
     byType: {
       fomo: 0,
@@ -25,12 +36,14 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
 
   useEffect(() => {
     loadDemonStats()
+    
+    const interval = setInterval(loadDemonStats, 5000)
+    return () => clearInterval(interval)
   }, [walletAddress])
 
   const loadDemonStats = async () => {
     const supabase = createClient()
     
-    // Get all demons for this wallet
     const { data: demons } = await supabase
       .from('demon_tracker')
       .select('*')
@@ -38,7 +51,7 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
       .order('created_at', { ascending: false })
 
     if (demons) {
-      const stats = {
+      const stats: DemonStats = {
         total: demons.length,
         byType: {
           fomo: demons.filter(d => d.demon_type === 'fomo').length,
@@ -54,14 +67,14 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
     setLoading(false)
   }
 
-  const getMostActiveDemon = () => {
-    const entries = Object.entries(demonStats.byType)
+  const getMostActiveDemon = (): [string, number] => {
+    const entries = Object.entries(demonStats.byType) as [string, number][]
     const sorted = entries.sort((a, b) => b[1] - a[1])
-    return sorted[0]
+    return sorted[0] || ['none', 0]
   }
 
-  const getDemonEmoji = (type: string) => {
-    const emojis: any = {
+  const getDemonEmoji = (type: string): string => {
+    const emojis: Record<string, string> = {
       fomo: '😰',
       greed: '🤑',
       impatience: '😤',
@@ -71,7 +84,7 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
     return emojis[type] || '👻'
   }
 
-  const getMessage = () => {
+  const getMessage = (): string => {
     if (demonStats.total === 0) return "All demons are quiet ✨"
     if (demonStats.total === 1) return "One demon encountered 💙"
     const [mostActive] = getMostActiveDemon()
@@ -81,7 +94,7 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
   if (loading) {
     return (
       <div className="zen-card p-6 text-center">
-        <div className="animate-pulse">Loading demons...</div>
+        <div className="animate-pulse normal-case tracking-normal">Loading demons...</div>
       </div>
     )
   }
@@ -92,12 +105,11 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
       animate={{ opacity: 1, scale: 1 }}
       className="zen-card p-6 space-y-4"
     >
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm text-slate-500">Your Inner Demons</div>
-          <div className="text-2xl font-semibold text-slate-700">
-            {demonStats.total} encountered
+          <div className="text-xs text-slate-500">YOUR INNER DEMONS</div>
+          <div className="text-xl font-semibold text-slate-700">
+            {demonStats.total} ENCOUNTERED
           </div>
         </div>
         <div className="text-4xl">
@@ -105,12 +117,10 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
         </div>
       </div>
 
-      {/* Message */}
-      <div className="text-sm text-slate-600 bg-beige-50 rounded-lg p-3">
+      <div className="text-xs text-slate-600 bg-beige-50 rounded-lg p-3 normal-case tracking-normal">
         {getMessage()}
       </div>
 
-      {/* Demon Types */}
       {demonStats.total > 0 && (
         <div className="grid grid-cols-5 gap-2 pt-2 border-t border-slate-100">
           {Object.entries(demonStats.byType).map(([type, count]) => (
@@ -125,14 +135,13 @@ export default function DemonCounter({ walletAddress }: DemonCounterProps) {
         </div>
       )}
 
-      {/* View Details Link */}
       {demonStats.total > 0 && (
         <div className="text-center pt-2">
           <button 
             onClick={() => router.push('/demons')}
             className="text-xs text-sage-600 hover:text-sage-700 transition-colors"
           >
-            View detailed history →
+            VIEW DETAILED HISTORY →
           </button>
         </div>
       )}
