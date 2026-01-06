@@ -95,7 +95,7 @@ export default function Dashboard() {
     setDemonRefresh(prev => prev + 1)
   }
 
-  const handleDisableProtection = async (protectionId: string) => {
+const handleDisableProtection = async (protectionId: string) => {
     if (!address) return
     
     const supabase = createClient()
@@ -137,6 +137,11 @@ export default function Dashboard() {
       .from('protection_rules')
       .update({ is_active: false })
       .eq('id', protectionId)
+    
+    // Track last disable time for revenge detection
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('lastDisableTime', Date.now().toString())
+    }
     
     loadUserData()
   }

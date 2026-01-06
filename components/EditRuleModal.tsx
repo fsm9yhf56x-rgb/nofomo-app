@@ -21,7 +21,8 @@ export default function EditRuleModal({
 }: EditRuleModalProps) {
   const [loading, setLoading] = useState(false)
   const [newPrice, setNewPrice] = useState(protection?.trigger_price || 0)
-  const [showGreedWarning, setShowGreedWarning] = useState(false)
+  const [showWarning, setShowWarning] = useState(false)
+  const [demonType, setDemonType] = useState<'greed' | 'fear'>('greed')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -30,21 +31,11 @@ export default function EditRuleModal({
     try {
       const supabase = createClient()
       
-      console.log('🔍 Edit Protection:', {
-        action_type: protection.action_type,
-        old_price: protection.trigger_price,
-        new_price: newPrice,
-        wallet: walletAddress
-      })
-      
       const isIncreasingTP = protection.action_type === 'take_profit' && newPrice > protection.trigger_price
-      
-      console.log('🤑 Is Increasing TP?', isIncreasingTP)
+      const isDecreasingStop = protection.action_type === 'stop_loss' && newPrice < protection.trigger_price
       
       if (isIncreasingTP) {
-        console.log('🎯 GREED DETECTED! Inserting demon...')
-        
-        const { data: insertData, error: insertError } = await supabase
+        await supabase
           .from('demon_tracker')
           .insert({
             wallet_address: walletAddress.toLowerCase(),
@@ -57,42 +48,55 @@ export default function EditRuleModal({
               token_pair: protection.token_pair
             }
           })
-          .select()
-        
-        if (insertError) {
-          console.error('❌ Error inserting demon:', insertError)
-        } else {
-          console.log('✅ Demon inserted successfully!', insertData)
-        }
+        setDemonType('greed')
       }
       
-      const { error: updateError } = await supabase
+      if (isDecreasingStop) {
+        const { data: fearHistory } = await supabase
+          .from('demon_tracker')
+          .select('*')
+          .eq('wallet_address', walletAddress)
+          .eq('demon_type', 'fear')
+          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        
+        const fearCount = (fearHistory?.length || 0) + 1
+        
+        await supabase
+          .from('demon_tracker')
+          .insert({
+            wallet_address: walletAddress,
+            demon_type: 'fear',
+            severity: fearCount >= 3 ? 'high' : 'medium',
+            event_data: {
+              action: 'decreased_stop_loss',
+              old_price: protection.trigger_price,
+              new_price: newPrice,
+              modification_count: fearCount
+            }
+          })
+        setDemonType('fear')
+      }
+      
+      await supabase
         .from('protection_rules')
         .update({ trigger_price: newPrice })
         .eq('id', protection.id)
       
-      if (updateError) {
-        console.error('❌ Error updating rule:', updateError)
-      } else {
-        console.log('✅ Rule updated successfully!')
-      }
-      
-      // Show greed warning if detected
-      if (isIncreasingTP) {
-        setShowGreedWarning(true)
+      if (isIncreasingTP || isDecreasingStop) {
+        setShowWarning(true)
       } else {
         onSuccess()
         onClose()
       }
     } catch (error) {
-      console.error('💥 Fatal error:', error)
+      console.error('Error updating rule:', error)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGreedWarningClose = () => {
-    setShowGreedWarning(false)
+  const handleWarningClose = () => {
+    setShowWarning(false)
     onSuccess()
     onClose()
   }
@@ -102,7 +106,7 @@ export default function EditRuleModal({
   return (
     <>
       <AnimatePresence>
-        {show && !showGreedWarning && (
+        {show && !showWarning && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -166,9 +170,8 @@ export default function EditRuleModal({
         )}
       </AnimatePresence>
 
-      {/* Greed Warning Modal */}
       <AnimatePresence>
-        {showGreedWarning && (
+        {showWarning && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -188,19 +191,23 @@ export default function EditRuleModal({
                   transition={{ duration: 2, repeat: Infinity }}
                   className="text-6xl mb-4"
                 >
-                  🤑
+                  {demonType === 'greed' ? '🤑' : '😨'}
                 </motion.div>
                 <h3 className="text-2xl font-semibold text-slate-700 mb-2">
-                  GREED DEMON DETECTED
+                  {demonType === 'greed' ? 'GREED DEMON' : 'FEAR DEMON'} DETECTED
                 </h3>
                 <p className="text-amber-600 text-sm normal-case tracking-normal">
-                  You've increased your Take Profit target
+                  {demonType === 'greed'
+                    ? "You've increased your Take Profit target"
+                    : "You've lowered your Stop Loss"}
                 </p>
               </div>
 
               <div className="bg-beige-50 rounded-lg p-4">
                 <p className="text-sm text-slate-600 normal-case tracking-normal">
-                  💰 Protecting gains is winning. Don't let greed steal your victory.
+                  {demonType === 'greed'
+                    ? "💰 Protecting gains is winning. Don't let greed steal your victory."
+                    : "😨 Fear clouds judgment. Trust your original plan."}
                 </p>
               </div>
 
@@ -210,7 +217,7 @@ export default function EditRuleModal({
               </div>
 
               <button
-                onClick={handleGreedWarningClose}
+                onClick={handleWarningClose}
                 className="w-full btn-zen py-3"
               >
                 I UNDERSTAND
