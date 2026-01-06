@@ -29,48 +29,60 @@ export default function EditRuleModal({
     try {
       const supabase = createClient()
       
+      console.log('🔍 Edit Protection:', {
+        action_type: protection.action_type,
+        old_price: protection.trigger_price,
+        new_price: newPrice,
+        wallet: walletAddress
+      })
+      
       // Check if increasing TP (greed detection)
       const isIncreasingTP = protection.action_type === 'take_profit' && newPrice > protection.trigger_price
       
+      console.log('🤑 Is Increasing TP?', isIncreasingTP)
+      
       if (isIncreasingTP) {
-        // Check how many times user modified this rule
-        const { data: history } = await supabase
+        console.log('🎯 GREED DETECTED! Inserting demon...')
+        
+        // Insert greed demon
+        const { data: insertData, error: insertError } = await supabase
           .from('demon_tracker')
-          .select('*')
-          .eq('wallet_address', walletAddress)
-          .eq('demon_type', 'greed')
-          .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+          .insert({
+            wallet_address: walletAddress.toLowerCase(),
+            demon_type: 'greed',
+            severity: 'medium',
+            event_data: {
+              action: 'increased_take_profit',
+              old_price: protection.trigger_price,
+              new_price: newPrice,
+              token_pair: protection.token_pair
+            }
+          })
+          .select()
         
-        const modCount = (history?.length || 0) + 1
-        
-        // Track greed even on first increase
-        if (modCount >= 1) {
-          await supabase
-            .from('demon_tracker')
-            .insert({
-              wallet_address: walletAddress,
-              demon_type: 'greed',
-              severity: modCount >= 3 ? 'high' : 'medium',
-              event_data: {
-                action: 'increased_take_profit',
-                old_price: protection.trigger_price,
-                new_price: newPrice,
-                modification_count: modCount
-              }
-            })
+        if (insertError) {
+          console.error('❌ Error inserting demon:', insertError)
+        } else {
+          console.log('✅ Demon inserted successfully!', insertData)
         }
       }
       
       // Update rule
-      await supabase
+      const { error: updateError } = await supabase
         .from('protection_rules')
         .update({ trigger_price: newPrice })
         .eq('id', protection.id)
       
+      if (updateError) {
+        console.error('❌ Error updating rule:', updateError)
+      } else {
+        console.log('✅ Rule updated successfully!')
+      }
+      
       onSuccess()
       onClose()
     } catch (error) {
-      console.error('Error updating rule:', error)
+      console.error('💥 Fatal error:', error)
     } finally {
       setLoading(false)
     }
@@ -117,6 +129,9 @@ export default function EditRuleModal({
                   onChange={(e) => setNewPrice(parseFloat(e.target.value))}
                   className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-sage-300"
                 />
+                <p className="text-xs text-slate-500 mt-1 normal-case tracking-normal">
+                  Current: ${protection.trigger_price}
+                </p>
               </div>
 
               <div className="flex gap-3">

@@ -36,13 +36,12 @@ export default function Dashboard() {
   const [loading, setLoading] = useState<boolean>(true)
   const [protections, setProtections] = useState<any[]>([])
   const [showLevelUp, setShowLevelUp] = useState<boolean>(false)
-  const [previousLevel, setPreviousLevel] = useState<number>(1)
-  const [showIntervention, setShowIntervention] = useState<boolean>(false)
   const [interventionData, setInterventionData] = useState<InterventionData>({
     demonType: '',
     context: '',
     protectionId: ''
   })
+  const [showIntervention, setShowIntervention] = useState<boolean>(false)
 
   useEffect(() => {
     if (isConnected && address) {
@@ -63,9 +62,16 @@ export default function Dashboard() {
       .single()
 
     if (profile) {
-      // Only show level up if we had a previous level AND it increased
-      if (previousLevel > 0 && profile.level > previousLevel) {
+      // Check if we should show level up
+      const lastSeenLevel = sessionStorage.getItem('lastSeenLevel')
+      const currentLevel = profile.level
+      
+      if (lastSeenLevel && parseInt(lastSeenLevel) < currentLevel) {
         setShowLevelUp(true)
+        sessionStorage.setItem('lastSeenLevel', currentLevel.toString())
+      } else if (!lastSeenLevel) {
+        // First time - just save current level, don't show modal
+        sessionStorage.setItem('lastSeenLevel', currentLevel.toString())
       }
       
       setUserProfile({
@@ -73,11 +79,6 @@ export default function Dashboard() {
         xp: profile.xp,
         streak_days: profile.streak_days
       })
-      
-      // Set previous level AFTER checking and showing modal
-      if (previousLevel === 1) {
-        setPreviousLevel(profile.level)
-      }
     }
 
     const { data: rules, count } = await supabase
