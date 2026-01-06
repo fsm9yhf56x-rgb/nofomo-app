@@ -54,6 +54,29 @@ export default function CreateRuleForm({ onSuccess, hasProtections }: CreateRule
         throw error
       }
 
+// Check for FOMO demon (creating rule during pump)
+      const pumpCheck = await fetch('/api/market/check-pump', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tokenPair: formData.tokenPair })
+      })
+      const { isPumping, pumpPercentage } = await pumpCheck.json()
+      
+      if (isPumping) {
+        await supabase
+          .from('demon_tracker')
+          .insert({
+            wallet_address: address.toLowerCase(),
+            demon_type: 'fomo',
+            severity: 'medium',
+            event_data: {
+              action: 'created_protection_during_pump',
+              pump_percentage: pumpPercentage,
+              token_pair: formData.tokenPair
+            }
+          })
+      }
+
       // Award XP
       await fetch('/api/xp/award', {
         method: 'POST',
