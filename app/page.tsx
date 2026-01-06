@@ -43,6 +43,7 @@ export default function Dashboard() {
   })
   const [showIntervention, setShowIntervention] = useState<boolean>(false)
   const [demonRefresh, setDemonRefresh] = useState<number>(0)
+  const [mostActiveDemon, setMostActiveDemon] = useState<string>('quiet')
 
   useEffect(() => {
     if (isConnected && address) {
@@ -93,9 +94,26 @@ export default function Dashboard() {
     
     // Force demon counter refresh
     setDemonRefresh(prev => prev + 1)
+    
+    // Load demon stats for status card
+    const { data: demons } = await supabase
+      .from('demon_tracker')
+      .select('demon_type')
+      .eq('wallet_address', walletAddress)
+    
+    if (demons && demons.length > 0) {
+      const counts = demons.reduce((acc: any, d) => {
+        acc[d.demon_type] = (acc[d.demon_type] || 0) + 1
+        return acc
+      }, {})
+      const sorted = Object.entries(counts).sort((a: any, b: any) => b[1] - a[1])
+      setMostActiveDemon(sorted[0][0])
+    } else {
+      setMostActiveDemon('quiet')
+    }
   }
 
-const handleDisableProtection = async (protectionId: string) => {
+  const handleDisableProtection = async (protectionId: string) => {
     if (!address) return
     
     const supabase = createClient()
@@ -300,9 +318,24 @@ const handleDisableProtection = async (protectionId: string) => {
               </div>
               
               <div className="zen-card p-4 text-center">
-                <div className="text-2xl mb-1">👻</div>
-                <div className="text-lg font-semibold text-slate-700">QUIET</div>
-                <div className="text-xs text-slate-500">DEMONS</div>
+                <motion.div 
+                  className="text-2xl mb-1"
+                  animate={{ scale: mostActiveDemon !== 'quiet' ? [1, 1.2, 1] : 1 }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  {mostActiveDemon === 'quiet' ? '👻' :
+                   mostActiveDemon === 'fomo' ? '😰' :
+                   mostActiveDemon === 'greed' ? '🤑' :
+                   mostActiveDemon === 'impatience' ? '😤' :
+                   mostActiveDemon === 'revenge' ? '😡' :
+                   mostActiveDemon === 'fear' ? '😨' : '👻'}
+                </motion.div>
+                <div className="text-lg font-semibold text-slate-700 capitalize">
+                  {mostActiveDemon === 'quiet' ? 'QUIET' : mostActiveDemon.toUpperCase()}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {mostActiveDemon === 'quiet' ? 'DEMONS' : 'MOST ACTIVE'}
+                </div>
               </div>
             </motion.div>
 
