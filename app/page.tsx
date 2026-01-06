@@ -42,6 +42,7 @@ export default function Dashboard() {
     protectionId: ''
   })
   const [showIntervention, setShowIntervention] = useState<boolean>(false)
+  const [demonRefresh, setDemonRefresh] = useState<number>(0)
 
   useEffect(() => {
     if (isConnected && address) {
@@ -62,7 +63,6 @@ export default function Dashboard() {
       .single()
 
     if (profile) {
-      // Check if we should show level up
       const lastSeenLevel = sessionStorage.getItem('lastSeenLevel')
       const currentLevel = profile.level
       
@@ -70,7 +70,6 @@ export default function Dashboard() {
         setShowLevelUp(true)
         sessionStorage.setItem('lastSeenLevel', currentLevel.toString())
       } else if (!lastSeenLevel) {
-        // First time - just save current level, don't show modal
         sessionStorage.setItem('lastSeenLevel', currentLevel.toString())
       }
       
@@ -91,6 +90,9 @@ export default function Dashboard() {
     setProtections(rules || [])
     setRulesCount(count || 0)
     setLoading(false)
+    
+    // Force demon counter refresh
+    setDemonRefresh(prev => prev + 1)
   }
 
   const handleDisableProtection = async (protectionId: string) => {
@@ -233,7 +235,10 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                <DemonCounter walletAddress={address} />
+                <DemonCounter 
+                  key={demonRefresh}
+                  walletAddress={address} 
+                />
               </motion.div>
             )}
           </motion.div>
