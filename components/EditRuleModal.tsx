@@ -43,7 +43,8 @@ export default function EditRuleModal({
         
         const modCount = (history?.length || 0) + 1
         
-        if (modCount >= 2) {
+        // Track greed even on first increase
+        if (modCount >= 1) {
           await supabase
             .from('demon_tracker')
             .insert({

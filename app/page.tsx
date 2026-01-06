@@ -63,16 +63,21 @@ export default function Dashboard() {
       .single()
 
     if (profile) {
-      if (profile.level > previousLevel && previousLevel > 0) {
+      // Only show level up if we had a previous level AND it increased
+      if (previousLevel > 0 && profile.level > previousLevel) {
         setShowLevelUp(true)
       }
-      setPreviousLevel(profile.level)
       
       setUserProfile({
         level: profile.level,
         xp: profile.xp,
         streak_days: profile.streak_days
       })
+      
+      // Set previous level AFTER checking and showing modal
+      if (previousLevel === 1) {
+        setPreviousLevel(profile.level)
+      }
     }
 
     const { data: rules, count } = await supabase
