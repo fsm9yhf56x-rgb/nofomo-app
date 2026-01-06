@@ -18,14 +18,14 @@ interface Protection {
 interface ProtectionCardProps {
   protection: Protection
   onDisable: (id: string) => void
+  onUpdate?: () => void
 }
 
-export default function ProtectionCard({ protection, onDisable }: ProtectionCardProps) {
+export default function ProtectionCard({ protection, onDisable, onUpdate }: ProtectionCardProps) {
   const isProfit = protection.action_type === 'take_profit'
   const [showConfirm, setShowConfirm] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
   
-  // Calculate days active
   const daysActive = Math.floor(
     (Date.now() - new Date(protection.created_at).getTime()) / (1000 * 60 * 60 * 24)
   )
@@ -43,6 +43,13 @@ export default function ProtectionCard({ protection, onDisable }: ProtectionCard
     setShowEdit(true)
   }
 
+  const handleSuccess = () => {
+    setShowEdit(false)
+    if (onUpdate) {
+      onUpdate()
+    }
+  }
+
   return (
     <>
       <motion.div
@@ -50,7 +57,6 @@ export default function ProtectionCard({ protection, onDisable }: ProtectionCard
         animate={{ opacity: 1, y: 0 }}
         className="zen-card p-6 space-y-4"
       >
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="text-3xl">
@@ -80,7 +86,6 @@ export default function ProtectionCard({ protection, onDisable }: ProtectionCard
           </div>
         </div>
 
-        {/* Details */}
         <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
           <div>
             <div className="text-xs text-slate-500">TRIGGER PRICE</div>
@@ -96,7 +101,6 @@ export default function ProtectionCard({ protection, onDisable }: ProtectionCard
           </div>
         </div>
 
-        {/* Status */}
         <div className="flex items-center justify-between pt-2">
           <div className="text-sm text-sage-600 flex items-center gap-2">
             <span>✓</span>
@@ -119,7 +123,6 @@ export default function ProtectionCard({ protection, onDisable }: ProtectionCard
         </div>
       </motion.div>
 
-      {/* Confirmation Modal */}
       <AnimatePresence>
         {showConfirm && (
           <motion.div
@@ -173,16 +176,12 @@ export default function ProtectionCard({ protection, onDisable }: ProtectionCard
         )}
       </AnimatePresence>
 
-      {/* Edit Modal */}
       {showEdit && (
         <EditRuleModal
           show={showEdit}
           protection={protection}
           onClose={() => setShowEdit(false)}
-          onSuccess={() => {
-            setShowEdit(false)
-            // Reload will be triggered by parent
-          }}
+          onSuccess={handleSuccess}
           walletAddress={protection.wallet_address}
         />
       )}
