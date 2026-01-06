@@ -95,11 +95,13 @@ export default function Dashboard() {
     // Force demon counter refresh
     setDemonRefresh(prev => prev + 1)
     
-    // Load demon stats for status card
+   // Load demon stats for status card (last 24h only)
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
     const { data: demons } = await supabase
       .from('demon_tracker')
       .select('demon_type')
       .eq('wallet_address', walletAddress)
+      .gte('created_at', yesterday)
     
     if (demons && demons.length > 0) {
       const counts = demons.reduce((acc: any, d) => {
